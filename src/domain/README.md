@@ -1,6 +1,6 @@
 # Domain Classes
 
-This directory contains domain classes that represent business entities in our application. Most domain classes extend either `BasicDomain` (for single objects) or `BasicArray` (for collections), which provide common functionality for Parse.com integration, change tracking, validation, and serialization.
+This directory contains domain classes that represent business entities in our application. Most domain classes extend either `BasicDomain` (for single objects) or `BasicArray` (for collections), which provide common functionality for change tracking, validation, and serialization.
 
 **Note:** Not all domains need to extend `BasicDomain` or `BasicArray`. Some domains that are not arrays or do not need to be persisted can be implemented as vanilla JavaScript class definitions.
 
@@ -8,13 +8,12 @@ This directory contains domain classes that represent business entities in our a
 
 ### BasicDomain
 
-`BasicDomain` is the base class for all domain objects that are persisted using Parse Platform. It extends `Parse.Object` and provides:
+`BasicDomain` is the base class for all domain objects. It provides:
 
 - **Dynamic property management** with automatic getters/setters
 - **Change tracking** to monitor unsaved modifications  
 - **Validation framework** with business rule checking
 - **Cloning and serialization** capabilities
-- **Parse.com integration** for seamless persistence
 
 ### BasicArray
 
@@ -58,11 +57,9 @@ export default class SimpleEntity extends BasicDomain {
         return this.name || `SimpleEntity ${this.id}`;
     }
 }
-
-global.Parse.Object.registerSubclass('SimpleEntity', SimpleEntity);
 ```
 
-***NOTE***: Its important that you never include `id` in the `DEFAULTS`. The object IDs are automatically added by Parse Object (as is `createdAt` and `updatedAt`) so adding it to the default list causes errors.
+***NOTE***: Never include `id` in `DEFAULTS`. The `id` is managed automatically by `BasicDomain`, so adding it to the defaults causes errors.
 
 ### Creating a Domain Class with Enums
 
@@ -119,8 +116,6 @@ export default class StatusEntity extends BasicDomain {
         return StatusEntity.STATUS_LABELS[this.status] || 'Unknown';
     }
 }
-
-global.Parse.Object.registerSubclass('StatusEntity', StatusEntity);
 ```
 
 ### Creating Array Classes
@@ -217,12 +212,7 @@ static DEFAULTS = { /* all properties with default values */ }
 static FIELDS = Object.keys(MyClass.DEFAULTS);
 ```
 
-### 2. Register Parse Subclasses
-```javascript
-global.Parse.Object.registerSubclass('ParseClassName', JavaScriptClass);
-```
-
-### 3. Implement Proper Validation
+### 2. Implement Proper Validation
 ```javascript
 isSavable() {
     // Check required fields, business rules, data formats
@@ -230,14 +220,14 @@ isSavable() {
 }
 ```
 
-### 4. Use Enums for Status Fields
+### 3. Use Enums for Status Fields
 ```javascript
 static STATUS_ACTIVE = 'ACTIVE';
 static STATUSES = [MyClass.STATUS_ACTIVE /* ... */];
 static STATUS_LABELS = { [MyClass.STATUS_ACTIVE]: 'Active' };
 ```
 
-### 5. Provide Helper Methods
+### 4. Provide Helper Methods
 ```javascript
 getLabel() { return this.name || `${this.constructor.name} ${this.id}`; }
 isActive() { return this.status === MyClass.STATUS_ACTIVE; }
@@ -246,7 +236,7 @@ isEmpty() { return !this.name && !this.description; }
 
 ## Transient Properties Pattern
 
-For performance optimization, domain objects can include transient properties - data that is loaded for convenience but not persisted as part of the domain object itself. This should be used conservatively.
+For performance optimization, domain objects can include transient properties - data that is loaded for convenience but not included in serialization. This should be used conservatively.
 
 ### Example: Transient Properties
 
@@ -286,7 +276,6 @@ export default class EntityWithTransients extends BasicDomain {
     set cachedData(value) { this.#cachedData = value; }
 }
 
-global.Parse.Object.registerSubclass('EntityWithTransients', EntityWithTransients);
 ```
 
 ### When to Use Transient Properties
@@ -297,10 +286,10 @@ global.Parse.Object.registerSubclass('EntityWithTransients', EntityWithTransient
 
 ### Important Notes
 
-- Transient properties are not saved to Parse when the object is persisted
+- Transient properties are not included in `toJSON()` serialization
 - Use private fields (`#property`) to clearly separate transient from persistent data
 - Consider the memory footprint when loading large amounts of transient data
 - Document transient properties clearly in your domain class comments
 - Both `BasicArray` and `BasicDomain` provide a `clone` function - It is important to always clone objects in the reducer/store so that React will be able to detect the change in objects.
 
-This domain architecture provides a robust foundation for Parse.com-based applications with comprehensive change tracking, validation, serialization, and relationship management capabilities.
+This domain architecture provides a robust foundation with comprehensive change tracking, validation, serialization, and relationship management capabilities.

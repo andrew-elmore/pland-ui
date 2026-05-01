@@ -37,9 +37,9 @@ npm run lint
 
 ```
 src/
-├── domain/              # Domain models extending Parse.Object
+├── domain/              # Domain models extending BasicDomain
 ├── store/               # Redux reducers, actions, and selectors
-├── hooks/               # React Query custom hooks
+├── hooks/               # Custom React hooks
 ├── components/          # Reusable UI components
 ├── features/            # Feature-specific components
 ├── screens/             # Full page components/views
@@ -59,27 +59,27 @@ src/
 - **Vitest** - Testing framework
 
 ### Data Management Philosophy
-See @src/store/README.md
+See `src/store/README.md`
 
-The app follows a **layered architecture** combining Parse Server's object model with Redux state management:
+The app follows a **layered architecture** with a service layer wrapping axios for API communication and Redux for state management:
 
 ```
-Parse Server (Database)
+API Server
     ↓
-API Functions (actions layer - returns Redux actions)
+Service Layer (axios via request() wrapper)
     ↓
-Redux Store (centralized state management)
+Redux Store (actions call services, middleware handles async)
     ↓
 React Components (UI layer)
 ```
 
-**Key Pattern**: Action functions return Redux action objects with `type` and `payload` (Promise). The Redux Promise Middleware handles async actions automatically. Parse.Query is used directly without any wrapper utilities.
+**Key Pattern**: Action functions return Redux action objects with `type`, `payload` (Promise from service call), and `meta`. The Redux Promise Middleware handles async actions automatically.
 
 ### Environment Configuration
 Create `.env` file from `.env.example`:
 
 ## Other Notes
-- All Parse Objects extend `./src/domain/BasicDomain.js`
+- All domain objects extend `./src/domain/BasicDomain.js`
 - ALWAYS run `/test` (`npm run lint` and `npm run test`) after all code changes and resolve any issues. For larger changes also run `npm run test:e2e`
 - ALWAYS use domain-developer agent when editing any code in `/src/domain`.
 - ALWAYS use redux-store-owner agent when editing any code in `/src/store`.

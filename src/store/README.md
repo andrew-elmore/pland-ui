@@ -35,10 +35,8 @@ const SET = 'SET_PROEJCT';
 
 ### 2. Domain Objects Only
 All objects in the Redux store must be domain objects that extend `BasicDomain` or `BasicArray`:
-- Individual items: Extend `BasicDomain` (which extends `Parse.Object`)
+- Individual items: Extend `BasicDomain`
 - Collections: Extend `BasicArray` (e.g., `ProjectArray`, `ProfileArray`)
-
-This allows Parse to handle serialization, deserialization, and tokenization automatically.
 
 ### 3. BasicArray Methods
 When working with collections, always use these `BasicArray` methods:
@@ -56,8 +54,9 @@ When working with collections, always use these `BasicArray` methods:
 
 ### 4. BasicDomain Methods
 Domain objects inherit from `BasicDomain` which provides:
-- `clone()` - Creates a deep copy (though Parse SDK often provides cloned objects already)
-- All Parse.Object methods (`save()`, `destroy()`, `toJSON()`, etc.)
+- `clone()` - Creates a deep copy
+- `set(field, value)` - Sets a field and returns `this`
+- `toJSON()` - Serializes the object
 
 ## Standard Template
 
@@ -65,12 +64,12 @@ Every reducer file should follow this example template:
 
 ```javascript
 import { createSelector } from '@reduxjs/toolkit';
-import { Parse } from '../utils/parseProvider';
+import * as organizationService from '../services/organization';
 import { Organization, OrganizationArray } from '../../domain';
 
 // Action type constants
 const LIST = 'LIST_ORGANIZATIONS';
-const ADD = 'ADD_ORGANIZATION';
+const CREATE = 'CREATE_ORGANIZATION';
 const UPDATE = 'UPDATE_ORGANIZATION';
 const DELETE = 'DELETE_ORGANIZATION';
 const SET = 'SET_ORGANIZATION';
@@ -128,7 +127,7 @@ export function reducer(state = initialState, action) {
             };
         }
 
-        case `${ADD}_PENDING`:
+        case `${CREATE}_PENDING`:
         case `${UPDATE}_PENDING`:
         case `${DELETE}_PENDING`: {
             return {
@@ -137,15 +136,15 @@ export function reducer(state = initialState, action) {
             };
         }
 
-        case `${ADD}_REJECTED`:
+        case `${CREATE}_REJECTED`:
         case `${UPDATE}_REJECTED`: {
             return {
                 ...state,
-                error: payload?.message || 'Failed to create/update organization',
+                error: payload?.message ?? 'Failed to create/update organization',
             };
         }
 
-        case `${ADD}_FULFILLED`:
+        case `${CREATE}_FULFILLED`:
         case `${UPDATE}_FULFILLED`: {
             return {
                 ...state,
@@ -171,7 +170,7 @@ export function reducer(state = initialState, action) {
         case `${DELETE}_REJECTED`: {
             return {
                 ...state,
-                error: payload?.message || 'Failed to delete organization',
+                error: payload?.message ?? 'Failed to delete organization',
             };
         }
 
@@ -189,27 +188,25 @@ export function reducer(state = initialState, action) {
 }
 
 export const actions = {
-    list: (status = Organization.STATUS_ACTIVE) => ({
+    list: (skipCount = 0, maxResultCount = 50) => ({
         type: LIST,
-        payload: new Parse.Query(Organization)
-            .equalTo('status', status)
-            .select(Organization.FIELDS)
-            .findAll()
+        meta: { skipCount, maxResultCount },
+        payload: organizationService.list({ skipCount, maxResultCount }),
     }),
     create: (organization) => ({
-        type: ADD,
+        type: CREATE,
         meta: { organization },
-        payload: organization.save(),
+        payload: organizationService.create(organization.toJSON()),
     }),
     update: (organization) => ({
         type: UPDATE,
         meta: { organization },
-        payload: organization.save(),
+        payload: organizationService.update(organization.toJSON()),
     }),
     remove: (organization) => ({
         type: DELETE,
         meta: { organization },
-        payload: organization.destroy(),
+        payload: organizationService.remove(organization.id),
     }),
     set: (id) => ({
         type: SET,
@@ -260,63 +257,41 @@ export const actions = {
 };
 ```
 
-### Parse Query Actions
-Prefer Parse Queries over cloud functions when possible:
+### Service-Based Actions
+Actions call service functions that wrap axios requests:
 
 ```javascript
+import * as carService from '../services/car';
+
 export const actions = {
-    // Get single record
     get: (id) => ({
         type: 'GET_CAR',
         meta: { id },
-        payload: new Parse.Query(Car)
-            .select(Car.FIELDS)
-            .get(id),
+        payload: carService.get(id),
     }),
 
-    // List multiple records
-    list: (skip = 0, limit = 50) => ({
+    list: (skipCount = 0, maxResultCount = 50) => ({
         type: 'LIST_CARS',
-        meta: { skip, limit },
-        payload: new Parse.Query(Car)
-            .skip(skip)
-            .limit(limit)
-            .select(Car.FIELDS)
-            .find(),
+        meta: { skipCount, maxResultCount },
+        payload: carService.list({ skipCount, maxResultCount }),
     }),
 
-    // Save single record (create or update)
-    save: (car) => ({
-        type: 'SAVE_CAR',
-        meta: { car },
-        payload: car.save(),
+    create: (data) => ({
+        type: 'CREATE_CAR',
+        meta: { data },
+        payload: carService.create(data),
     }),
 
-    // Save multiple records
-    saveAll: (cars) => ({
-        type: 'SAVE_ALL_CARS',
-        meta: { cars }, 
-        payload: Parse.Object.saveAll(cars),
+    update: (data) => ({
+        type: 'UPDATE_CAR',
+        meta: { data },
+        payload: carService.update(data),
     }),
 
-    // Delete record
-    remove: (car) => ({
+    remove: (id) => ({
         type: 'DELETE_CAR',
-        meta: { car },
-        payload: car.destroy(),
-    }),
-};
-```
-
-### Parse Cloud Functions
-For complex operations requiring server-side logic:
-
-```javascript
-export const actions = {
-    sendCarNotice: (car) => ({
-        type: 'SEND_CAR_NOTICE',
-        meta: { car },
-        payload: Parse.Cloud.run('sendCarNotice', { car: car.toJSON() }),
+        meta: { id },
+        payload: carService.remove(id),
     }),
 };
 ```
@@ -326,35 +301,34 @@ export const actions = {
 ### ✅ DO:
 - **ALWAYS** return a Promise as the payload
 - Pass all parameters to `meta` for debugging
-- Use `select()` with specific fields for performance
-- Convert Parse Objects to JSON when passing to Cloud functions
 - Use shorter action names (`get` not `getOrganization`)
 - Use template literals for async action states (`${LIST}_PENDING`)
+- Use `??` (not `||`) for payload fallbacks
 
 ### ❌ DON'T:
 - Never use `await` inside action creators
 - Never use async functions in the payload
 - Never store plain JavaScript objects - always use domain objects
 - Never manually construct arrays - use domain array classes
+- Never chain multiple service calls in a single action payload
 
 **❌ WRONG:**
 ```javascript
 export const list = () => ({
     type: 'FETCH_ORGANIZATIONS',
-    payload: (async () => {  // DON'T use async
-        const orgs = await new Parse.Query(Organization).find();  // DON'T await
-        return new OrganizationArray(orgs);  // DON'T transform
+    payload: (async () => {
+        const orgs = await organizationService.list();
+        return new OrganizationArray(orgs);
     })(),
 });
 ```
 
 **✅ CORRECT:**
 ```javascript
-export const list = () => ({
-    type: 'FETCH_ORGANIZATIONS',
-    payload: new Parse.Query(Organization)
-        .select(Organization.FIELDS)
-        .find()  // Returns Promise directly
+export const list = (skipCount = 0, maxResultCount = 50) => ({
+    type: 'LIST_ORGANIZATIONS',
+    meta: { skipCount, maxResultCount },
+    payload: organizationService.list({ skipCount, maxResultCount }),
 });
 ```
 
@@ -391,8 +365,8 @@ function OrganizationList() {
 
     // Update organization
     const handleUpdate = (org) => {
-        org.set('name', 'New Name');
-        dispatch(actions.update(org));
+        const updated = org.clone().set('name', 'New Name');
+        dispatch(actions.update(updated));
     };
 
     // Delete organization
@@ -432,9 +406,8 @@ function UserProfile({ userId }) {
     const user = users.get(userId);  // Using BasicArray's get method
 
     const handleSave = () => {
-        user.set('firstName', 'John');
-        user.set('lastName', 'Doe');
-        dispatch(actions.update(user));
+        const updated = user.clone().set({ firstName: 'John', lastName: 'Doe' });
+        dispatch(actions.update(updated));
     };
 
     return (
