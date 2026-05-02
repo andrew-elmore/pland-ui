@@ -1,35 +1,37 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router';
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Link, useNavigate } from 'react-router-dom';
 import {
     AppBar as MuiAppBar,
     Box,
     Container,
     Button,
-    IconButton,
-    List,
-    ListItem,
-    ListItemButton,
     Typography,
-    Drawer,
     Toolbar,
-    useMediaQuery,
-    useTheme,
 } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import CloseIcon from '@mui/icons-material/Close';
-
-const navLinks = [
-    { text: 'HOME', href: '/' },
-    { text: 'ABOUT', href: '/about' },
-];
+import { actions as authActions, selectors as authSelectors } from '../../store/auth';
+import { selectors as profileSelectors } from '../../store/profile';
+import ROUTES from '../../router/routes';
 
 const AppBar = () => {
-    const [mobileOpen, setMobileOpen] = useState(false);
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
 
-    const toggleDrawer = () => {
-        setMobileOpen(!mobileOpen);
+    const isAuthenticated = useSelector(authSelectors.isAuthenticated);
+    const user = useSelector(authSelectors.me);
+    const profileFirstName = useSelector(profileSelectors.firstName);
+    const profileLastName = useSelector(profileSelectors.lastName);
+
+    const displayName = profileFirstName
+        ? `${profileFirstName} ${profileLastName}`.trim()
+        : user?.email ?? '';
+
+    const handleLogout = () => {
+        dispatch(authActions.logout());
+    };
+
+    const handleLoginClick = () => {
+        navigate(ROUTES.LOGIN);
     };
 
     return (
@@ -60,115 +62,53 @@ const AppBar = () => {
                             py: 1,
                         }}
                     >
-                        <img
-                            src="/logo-light.webp"
-                            alt="{{App Name}}"
-                            width={112}
-                            height="auto"
-                        />
+                        <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary' }}>
+                            Pland
+                        </Typography>
                     </Box>
 
-                    {!isMobile && (
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                            {navLinks.map((link) => (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        {isAuthenticated ? (
+                            <>
                                 <Typography
-                                    key={link.text}
-                                    component={Link}
-                                    to={link.href}
                                     sx={{
                                         fontSize: '0.875rem',
                                         fontWeight: 600,
                                         color: 'text.primary',
-                                        textDecoration: 'none',
-                                        '&:hover': {
-                                            color: 'primary.main',
-                                        },
                                     }}
                                 >
-                                    {link.text}
+                                    {displayName}
                                 </Typography>
-                            ))}
+                                <Button
+                                    variant="outlined"
+                                    size="small"
+                                    onClick={handleLogout}
+                                    sx={{
+                                        borderRadius: '20px',
+                                        textTransform: 'none',
+                                        fontWeight: 600,
+                                    }}
+                                >
+                                    Logout
+                                </Button>
+                            </>
+                        ) : (
                             <Button
-                                component={Link}
-                                to="/get-help"
-                                variant="contained"
+                                variant="outlined"
                                 size="small"
+                                onClick={handleLoginClick}
                                 sx={{
                                     borderRadius: '20px',
-                                    ml: 1,
-                                    px: 2,
                                     textTransform: 'none',
                                     fontWeight: 600,
                                 }}
                             >
-                                GET HELP
+                                Login
                             </Button>
-                        </Box>
-                    )}
-
-                    {isMobile && (
-                        <IconButton
-                            edge="end"
-                            color="inherit"
-                            onClick={toggleDrawer}
-                            aria-label="Open main menu"
-                            sx={{ color: 'text.primary' }}
-                        >
-                            <MenuIcon />
-                        </IconButton>
-                    )}
+                        )}
+                    </Box>
                 </Toolbar>
             </Container>
-
-            <Drawer
-                anchor="right"
-                open={mobileOpen}
-                onClose={toggleDrawer}
-                sx={{
-                    '& .MuiDrawer-paper': {
-                        width: { xs: '100%', sm: 320 },
-                    },
-                }}
-            >
-                <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="h6">Menu</Typography>
-                    <IconButton onClick={toggleDrawer} edge="end">
-                        <CloseIcon />
-                    </IconButton>
-                </Box>
-                <List sx={{ px: 2 }}>
-                    {navLinks.map((link) => (
-                        <ListItem key={link.text} disablePadding>
-                            <ListItemButton
-                                component={Link}
-                                to={link.href}
-                                sx={{
-                                    fontWeight: 600,
-                                    fontSize: '1rem',
-                                }}
-                            >
-                                {link.text}
-                            </ListItemButton>
-                        </ListItem>
-                    ))}
-                    <ListItem sx={{ mt: 2 }}>
-                        <Button
-                            component={Link}
-                            to="/get-help"
-                            variant="contained"
-                            size="large"
-                            fullWidth
-                            sx={{
-                                borderRadius: '20px',
-                                textTransform: 'none',
-                                fontWeight: 600,
-                            }}
-                        >
-                            GET HELP
-                        </Button>
-                    </ListItem>
-                </List>
-            </Drawer>
         </MuiAppBar>
     );
 };

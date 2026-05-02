@@ -1,41 +1,35 @@
-import Parse from 'parse';
-
-/**
- * [PARSE]
- * Represents a basic domain model for Parse.Object with additional functionality such as attribute getters/setters,
- * dirty tracking, original values retention, and validation methods.
- *
- * @extends Parse.Object
- */
-export default class BasicDomain extends Parse.Object {
+export default class BasicDomain {
 
     constructor(className, props = {}, defaults = {}) {
-        super(className);
+        this._className = className;
+        this._attributes = {};
+        this._originalValues = {};
 
-        // Retain attributes
-        let attr = defaults;
+        let attr = { ...defaults };
         if (props.attributes) {
             attr = { ...defaults, ...props.attributes };
         } else if (typeof props === 'object') {
             attr = { ...defaults, ...props };
         }
 
-        if(props.id) {
-            super.set('id', props.id);
-            attr['_localId'] = props._localId; // Used by LiveQuery to persist objects across calls
+        if (props.id) {
+            this.id = props.id;
         }
 
-        super.set(attr);
+        Object.keys(attr).forEach(key => {
+            this._attributes[key] = attr[key];
+        });
+
         this._initOriginalValues(props._originalValues ?? {});
 
-        // Dynamically create getters and setters for each property in defaults
         Object.keys(defaults).forEach(key => {
-            if (!this[key]) {
+            if (!Object.getOwnPropertyDescriptor(Object.getPrototypeOf(this), key)
+                && !Object.getOwnPropertyDescriptor(this, key)) {
                 Object.defineProperty(this, key, {
-                    get: function() {
-                        return this.get(key) ?? defaults[key];
+                    get() {
+                        return this._attributes[key] ?? defaults[key];
                     },
-                    set: function(value) {
+                    set(value) {
                         this.set(key, value ?? defaults[key]);
                     },
                 });
@@ -55,26 +49,29 @@ export default class BasicDomain extends Parse.Object {
         }
     }
 
-    set(key, value, options) {
+    get(key) {
+        return this._attributes[key];
+    }
+
+    set(key, value) {
         if (typeof key === 'object') {
             Object.keys(key).forEach(k => {
-                this._logOriginalValue(k, value, this.get(k));
+                this._logOriginalValue(k, key[k], this.get(k));
+                this._attributes[k] = key[k];
             });
         } else {
             this._logOriginalValue(key, value, this.get(key));
+            this._attributes[key] = value;
         }
-        return super.set(key, value, options);
-    }
-
-    reset() {
-        super.set(this._originalValues);
-        this._initOriginalValues();
         return this;
     }
 
-    async save(...args) {
+    reset() {
+        Object.keys(this._originalValues).forEach(k => {
+            this._attributes[k] = this._originalValues[k];
+        });
         this._initOriginalValues();
-        return super.save(...args);
+        return this;
     }
 
     isDirty = () => Object.keys(this._originalValues).length > 0;
@@ -83,58 +80,19 @@ export default class BasicDomain extends Parse.Object {
 
     isSavable = () => false;
 
-    clone() {
-        const Cls = this.constructor;
-        return new Cls(this);
+    equals(other) {
+        return other && this.id != null && this.id === other.id;
     }
 
-    /**
-     * Inspects the current object instance for issues.
-     *
-     * This is a basic placeholder method intended to be overridden in child classes.
-     * By default, it returns a Promise that resolves to an empty object, ensuring
-     * consistency in behavior across all derived classes if they do not implement
-     * their own inspect method.
-     *
-     * Child Class Override Example:
-     * ```
-     * // In a child class like Employee
-     * export default class Example extends BasicDomain {
-     *  static VALIDATION_SCHEMA = yup.object({
-     *    field1: yup.string().required('Field 1 is required'),
-     *    field2: yup.string().email('Invalid email format').required('Field 2 is required'),
-     *  }).required();
-     *
-     *   inspect = () => {
-     *     return Example.VALIDATION_SCHEMA.validate({...this}, { abortEarly: false });
-     *   }
-     * }
-     * ```
-     * In this example, the Example class uses Yup to define a validation schema
-     * and the inspect method validates the instance against this schema.
-     *
-     * UI Component Usage Example:
-     * ```
-     * // In a React component
-     * const [errors, setErrors] = useState({});
-     * const handleSubmit = async (event) => {
-     *    try {
-     *      await myObject.inspect();
-     *      onSave(myObject);
-     *    } catch (err) {
-     *      const newErrors = err.inner.reduce((acc, curr) => {
-     *        acc[curr.path] = curr.message;
-     *        return acc;
-     *      }, {});
-     *      setErrors(newErrors);
-     *    }
-     *  };
-     * ```
-     * Here, the inspect method is used to validate an object before saving.
-     *
-     * @returns {Promise<Object>} A Promise that resolves to an object of errors where the key is the field with the
-     *                            error and the value is the error message.
-     */
+    clone() {
+        const Cls = this.constructor;
+        return new Cls({ ...this._attributes, id: this.id });
+    }
+
+    toJSON() {
+        return { id: this.id, ...this._attributes };
+    }
+
     inspect = () => {
         return new Promise(resolve => {
             resolve({});

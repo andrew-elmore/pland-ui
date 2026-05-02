@@ -2,28 +2,26 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ROUTES from './routes';
 
-// Screen components
 import HomeScreen from '../screens/HomeScreen';
-import AboutScreen from '../screens/AboutScreen';
-import GetHelpScreen from '../screens/GetHelpScreen';
+import PlanLayout from '../screens/plans/PlanLayout';
+import PlanItinerariesScreen from '../screens/plans/PlanItinerariesScreen';
+import PlanParticipantsScreen from '../screens/plans/PlanParticipantsScreen';
+import PlanLocationsScreen from '../screens/plans/PlanLocationsScreen';
+import LoginScreen from '../screens/auth/LoginScreen';
+import RegisterScreen from '../screens/auth/RegisterScreen';
 
-/**
- * Main application router
- * Centralizes all routing logic and route definitions
- */
-export const AppRouter = () => {
+const AppRouter = () => {
     return (
         <Routes>
-            {/* Welcome page for unauthenticated users */}
             <Route path={ROUTES.HOME} element={<HomeScreen />} />
-
-            {/* About page */}
-            <Route path={ROUTES.ABOUT} element={<AboutScreen />} />
-
-            {/* Get Help page */}
-            <Route path={ROUTES.HELP} element={<GetHelpScreen />} />
-
-            {/* Catch all - redirect to home */}
+            <Route path={ROUTES.PLAN} element={<PlanLayout />}>
+                <Route index element={<Navigate to="itineraries" replace />} />
+                <Route path="itineraries" element={<PlanItinerariesScreen />} />
+                <Route path="participants" element={<PlanParticipantsScreen />} />
+                <Route path="locations" element={<PlanLocationsScreen />} />
+            </Route>
+            <Route path={ROUTES.LOGIN} element={<LoginScreen />} />
+            <Route path={ROUTES.REGISTER} element={<RegisterScreen />} />
             <Route path={ROUTES.NOT_FOUND} element={<Navigate to={ROUTES.HOME} replace />} />
         </Routes>
     );

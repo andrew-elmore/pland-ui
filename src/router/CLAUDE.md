@@ -4,16 +4,16 @@ Conventions for all code in `src/router/`.
 
 ## Route constants
 
-All route paths are defined in `routes.js` as a single `ROUTES` object. Path pattern: `/:resource/:id/:tab/:action`.
+All route paths are defined in `routes.js` as a single `ROUTES` object. Path pattern: `/:resource/:resourceId/:sub-section`.
 
 ```javascript
 export const ROUTES = {
     HOME: '/',
-    
+
     CONTACT_LIST: '/contacts',
     CONTACT_CREATE: '/contacts/create',
-    CONTACT_DETAILS: '/contacts/:id',
-    CONTACT_EDIT: '/contacts/:id/edit',
+    CONTACT_DETAILS: '/contacts/:contactId',
+    CONTACT_EDIT: '/contacts/:contactId/edit',
 
     NOT_FOUND: '*',
 };
@@ -23,6 +23,19 @@ export default ROUTES;
 
 Naming convention: `RESOURCE_ACTION` in SCREAMING_SNAKE_CASE. List routes omit the action suffix. Sub-section routes use the tab name: `PROPERTY_GENERAL`, `PROPERTY_UNIT_MIX`.
 
+## Route parameter naming
+
+Never use generic `:id` in route params. Always prefix with the entity name: `:contactId`, `:planId`, `:itineraryId`. This applies to route definitions, `useParams()` destructuring, and `.replace()` calls.
+
+```javascript
+PLAN: '/plans/:planId',
+PLAN_ITINERARIES: '/plans/:planId/itineraries',
+
+const { planId } = useParams();
+
+navigate(ROUTES.PLAN.replace(':planId', plan.id));
+```
+
 ## Using routes in components
 
 Always use the `ROUTES` constant for navigation. Never hardcode path strings. Use `.replace()` for parameterized paths:
@@ -30,9 +43,9 @@ Always use the `ROUTES` constant for navigation. Never hardcode path strings. Us
 ```javascript
 import ROUTES from '../../router/routes';
 
-navigate(ROUTES.CONTACT_DETAILS.replace(':id', contact.id));
+navigate(ROUTES.CONTACT_DETAILS.replace(':contactId', contact.id));
 
-<Link to={ROUTES.CONTACT_EDIT.replace(':id', contact.id)}>Edit</Link>
+<Link to={ROUTES.CONTACT_EDIT.replace(':contactId', contact.id)}>Edit</Link>
 ```
 
 ## AppRouter structure
@@ -76,7 +89,7 @@ The layout component renders an `<Outlet />` for child routes.
 For resources with tabs, redirect the base route to the default tab:
 
 ```javascript
-<Route path="/contacts/:id" element={<Navigate to="general" replace />} />
+<Route path="/plans/:planId" element={<Navigate to="itineraries" replace />} />
 ```
 
 ## Catch-all

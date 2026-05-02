@@ -230,7 +230,7 @@ Use route constants with `.replace()`:
 ```javascript
 import ROUTES from '../../router/routes';
 
-<Link component={RouterLink} to={ROUTES.ITEM_DETAILS.replace(':id', item.id)}>
+<Link component={RouterLink} to={ROUTES.ITEM_DETAILS.replace(':itemId', item.id)}>
 ```
 
 Import `Link` from `react-router-dom` (not `react-router`).

@@ -43,6 +43,7 @@ export default [
                 URLSearchParams: 'readonly',
                 gtag: 'readonly',
                 sessionStorage: 'readonly',
+                localStorage: 'readonly',
             },
         },
         plugins: {

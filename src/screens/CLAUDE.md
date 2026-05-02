@@ -128,7 +128,7 @@ const ContactCreateScreen = () => {
     const submit = useMutateEffect(isMutating, error, {
         onSuccess: () => {
             if (!selectedId) return;
-            navigate(ROUTES.CONTACT_DETAILS.replace(':id', selectedId));
+            navigate(ROUTES.CONTACT_DETAILS.replace(':contactId', selectedId));
         },
     });
 
@@ -180,7 +180,7 @@ export default ContactCreateScreen;
 
 ```javascript
 const ContactEditScreen = () => {
-    const { id } = useParams();
+    const { contactId } = useParams();
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
@@ -192,12 +192,12 @@ const ContactEditScreen = () => {
     const [errors, setErrors] = useState({});
 
     const submit = useMutateEffect(isMutating, error, {
-        onSuccess: () => navigate(ROUTES.CONTACT_DETAILS.replace(':id', id)),
+        onSuccess: () => navigate(ROUTES.CONTACT_DETAILS.replace(':contactId', contactId)),
     });
 
     useEffect(() => {
-        const numericId = Number(id);
-        if (id && (!contact || contact.id !== numericId)) {
+        const numericId = Number(contactId);
+        if (contactId && (!contact || contact.id !== numericId)) {
             dispatch(actions.get(numericId));
         }
     }, [id, contact?.id, dispatch]);
@@ -257,7 +257,7 @@ const ContactEditScreen = () => {
                         onChange={handleChange}
                         errors={errors}
                         onSubmit={handleSubmit}
-                        onCancel={() => navigate(ROUTES.CONTACT_DETAILS.replace(':id', id))}
+                        onCancel={() => navigate(ROUTES.CONTACT_DETAILS.replace(':contactId', contactId))}
                         isLoading={isLoading || isMutating}
                         submitButtonText="SAVE"
                     />
@@ -272,7 +272,7 @@ const ContactEditScreen = () => {
 
 ```javascript
 const ContactDetailsScreen = () => {
-    const { id } = useParams();
+    const { contactId } = useParams();
     const dispatch = useDispatch();
 
     const contact = useSelector(selectors.current);
@@ -280,8 +280,8 @@ const ContactDetailsScreen = () => {
     const error = useSelector(selectors.error);
 
     useEffect(() => {
-        if (id && (!contact || contact.id !== Number(id))) {
-            dispatch(actions.get(Number(id)));
+        if (contactId && (!contact || contact.id !== Number(contactId))) {
+            dispatch(actions.get(Number(contactId)));
         }
     }, [id, contact?.id, dispatch]);
 
@@ -304,7 +304,7 @@ const ContactDetailsScreen = () => {
                             <Button variant="outlined" startIcon={<HistoryIcon />}
                                 onClick={() => setHistoryOpen(true)}>View History</Button>
                             <Button variant="contained" startIcon={<EditIcon />}
-                                component={Link} to={ROUTES.CONTACT_EDIT.replace(':id', contact.id)}>Edit</Button>
+                                component={Link} to={ROUTES.CONTACT_EDIT.replace(':contactId', contact.id)}>Edit</Button>
                         </Box>
                     </Box>
                     <Grid container spacing={3}>
@@ -335,12 +335,12 @@ Every screen must follow this wrapper structure:
 
 - Fetch in `useEffect` on mount, guarded by current data check
 - Use `useParams()` for route parameters
-- Always convert string params to numbers: `Number(id)`
+- Always convert string params to numbers when needed: `Number(contactId)`
 
 ## Navigation
 
 - Use `useNavigate()` for programmatic navigation
-- Always use `ROUTES` constants with `.replace(':id', id)` for paths — never hardcode path strings
+- Always use `ROUTES` constants with `.replace(':entityId', id)` for paths — never hardcode path strings. Never use generic `:id`; always prefix with entity name (`:contactId`, `:planId`, etc.)
 - Use `Link` component from `react-router-dom` for declarative navigation
 
 ## useMutateEffect
@@ -349,7 +349,7 @@ Used in create and edit screens for post-save actions (redirect, close dialog):
 
 ```javascript
 const submit = useMutateEffect(isMutating, error, {
-    onSuccess: () => navigate(ROUTES.CONTACT_DETAILS.replace(':id', id)),
+    onSuccess: () => navigate(ROUTES.CONTACT_DETAILS.replace(':contactId', contactId)),
 });
 ```
 

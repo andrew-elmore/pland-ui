@@ -1,15 +1,9 @@
-import { Parse } from '../utils/parseProvider';
+import * as authService from '../services/auth';
 
-// Action type constants
 const LOGIN = 'LOGIN_USER';
 const LOGOUT = 'LOGOUT_USER';
-const DELETE_USER = 'DELETE_USER';
 const SIGNUP = 'ADD_USER';
-const RESET_PASSWORD = 'RESET_PASSWORD';
-const RESTORE = 'RESTORE_USER';
-const SET_PASSWORD = 'SET_USER_PASSWORD';
 const CLEAR_ERROR = 'CLEAR_AUTH_ERROR';
-const SET_USER = 'SET_USER';
 
 const initialState = {
     user: null,
@@ -17,40 +11,16 @@ const initialState = {
     isLoading: false,
     isLoaded: false,
     error: null,
-    signupSuccess: false,
-    resetPasswordSuccess: false,
 };
 
 export function reducer(state = initialState, action) {
     const { type, payload } = action;
-
-    // Status code 209 is a special code from Parse, used when the session is invalid or expired.
-    // The sessionMiddleware will handle logging out from Parse and showing notification
-    if (payload?.code === 209) {
-        return {
-            ...initialState,
-            error: 'Session expired',
-        };
-    }
 
     switch (type) {
     case CLEAR_ERROR: {
         return {
             ...state,
             error: null,
-            signupSuccess: false,
-            resetPasswordSuccess: false,
-        };
-    }
-
-    case SET_USER: {
-        return {
-            ...state,
-            user: payload ? {
-                id: payload.id,
-                ...payload.attributes,
-            } : null,
-            isAuthenticated: !!payload,
         };
     }
 
@@ -62,7 +32,6 @@ export function reducer(state = initialState, action) {
         };
     }
 
-    case RESTORE:
     case `${LOGIN}_FULFILLED`: {
         if (!payload) {
             return {
@@ -74,26 +43,13 @@ export function reducer(state = initialState, action) {
             };
         }
 
-        // Check if user has a valid session token
-        // getSessionToken() returns undefined for unverified users
-        const hasValidSession = payload.getSessionToken && payload.getSessionToken();
-
-        if (!hasValidSession) {
-            // User exists in localStorage but no valid session
-            // This happens for unverified email signups
-            return {
-                ...state,
-                user: null,
-                isAuthenticated: false,
-                isLoading: false,
-                isLoaded: true,
-                error: null,
-            };
+        if (payload.token) {
+            localStorage.setItem('pland_token', payload.token);
         }
 
         return {
             ...state,
-            user: payload,
+            user: payload.user ?? null,
             isAuthenticated: true,
             isLoading: false,
             isLoaded: true,
@@ -101,22 +57,31 @@ export function reducer(state = initialState, action) {
         };
     }
 
-    case `${LOGOUT}_PENDING`:
     case `${LOGIN}_REJECTED`: {
+        localStorage.removeItem('pland_token');
         return {
             ...state,
             user: null,
             isAuthenticated: false,
             isLoading: false,
             isLoaded: true,
-            error: payload?.message || 'Login failed',
+            error: payload?.message ?? 'Login failed',
+        };
+    }
+
+    case `${LOGOUT}_PENDING`: {
+        localStorage.removeItem('pland_token');
+        return {
+            ...state,
+            user: null,
+            isAuthenticated: false,
+            isLoading: false,
+            isLoaded: true,
         };
     }
 
     case `${LOGOUT}_FULFILLED`:
-    case `${LOGOUT}_REJECTED`:
-    case `${DELETE_USER}_FULFILLED`:
-    case `${DELETE_USER}_REJECTED`: {
+    case `${LOGOUT}_REJECTED`: {
         return initialState;
     }
 
@@ -129,14 +94,17 @@ export function reducer(state = initialState, action) {
     }
 
     case `${SIGNUP}_FULFILLED`: {
+        if (payload?.token) {
+            localStorage.setItem('pland_token', payload.token);
+        }
+
         return {
             ...state,
-            user: null,
-            isAuthenticated: false,
+            user: payload?.user ?? null,
+            isAuthenticated: true,
             isLoading: false,
             isLoaded: true,
             error: null,
-            signupSuccess: true,
         };
     }
 
@@ -147,57 +115,7 @@ export function reducer(state = initialState, action) {
             isAuthenticated: false,
             isLoading: false,
             isLoaded: true,
-            error: payload?.message || 'Signup failed',
-            signupSuccess: false,
-        };
-    }
-
-    case `${RESET_PASSWORD}_PENDING`: {
-        return {
-            ...state,
-            isLoading: true,
-            error: null,
-        };
-    }
-
-    case `${RESET_PASSWORD}_FULFILLED`: {
-        return {
-            ...state,
-            isLoading: false,
-            error: null,
-            resetPasswordSuccess: true,
-        };
-    }
-
-    case `${RESET_PASSWORD}_REJECTED`: {
-        return {
-            ...state,
-            isLoading: false,
-            error: payload?.message || 'Password reset failed',
-        };
-    }
-
-    case `${SET_PASSWORD}_PENDING`: {
-        return {
-            ...state,
-            isLoading: true,
-            error: null,
-        };
-    }
-
-    case `${SET_PASSWORD}_FULFILLED`: {
-        return {
-            ...state,
-            isLoading: false,
-            error: null,
-        };
-    }
-
-    case `${SET_PASSWORD}_REJECTED`: {
-        return {
-            ...state,
-            isLoading: false,
-            error: payload?.message || 'Password update failed',
+            error: payload?.message ?? 'Signup failed',
         };
     }
 
@@ -211,76 +129,27 @@ export const actions = {
     login: (credentials) => ({
         type: LOGIN,
         meta: { credentials },
-        payload: Parse.User.logIn(credentials.username, credentials.password),
+        payload: authService.login(credentials),
+    }),
+
+    signup: (credentials) => ({
+        type: SIGNUP,
+        meta: { credentials },
+        payload: authService.register(credentials),
     }),
 
     logout: () => ({
         type: LOGOUT,
-        payload: Parse.User.logOut(),
-    }),
-
-    signup: (credentials) => {
-        const user = new Parse.User();
-        user.set('username', credentials.username);
-        user.set('password', credentials.password);
-        user.set('email', credentials.email);
-
-        return {
-            type: SIGNUP,
-            meta: { credentials },
-            payload: user.signUp(),
-        };
-    },
-
-    resetPassword: (resetData) => ({
-        type: RESET_PASSWORD,
-        meta: { email: resetData.email },
-        payload: Parse.User.requestPasswordReset(resetData.email),
-    }),
-
-    restore: () => ({
-        type: RESTORE,
-        payload: Parse.User.current(),
-    }),
-
-    become: (sessionToken) => ({
-        type: LOGIN,
-        meta: { sessionToken },
-        payload: Parse.User.become(sessionToken),
-    }),
-
-    setPassword: (newPassword) => {
-        const currentUser = Parse.User.current();
-        if (!currentUser) {
-            return {
-                type: SET_PASSWORD,
-                meta: { newPassword },
-                payload: Promise.reject(new Error('No user logged in')),
-            };
-        }
-        currentUser.set('password', newPassword);
-
-        return {
-            type: SET_PASSWORD,
-            meta: { newPassword },
-            payload: currentUser.save(),
-        };
-    },
-
-    clearError: () => ({
-        type: CLEAR_ERROR,
         payload: Promise.resolve(null),
     }),
 
-    setUser: (user) => ({
-        type: SET_USER,
-        meta: { user },
-        payload: Promise.resolve(user),
+    restore: () => ({
+        type: LOGIN,
+        payload: authService.me(),
     }),
 
-    delete: () => ({
-        type: DELETE_USER,
-        payload: Parse.Cloud.run('deleteUser'),
+    clearError: () => ({
+        type: CLEAR_ERROR,
     }),
 };
 
@@ -290,8 +159,6 @@ export const selectors = {
     isLoading: (state) => state.auth.isLoading,
     isLoaded: (state) => state.auth.isLoaded,
     error: (state) => state.auth.error,
-    signupSuccess: (state) => state.auth.signupSuccess,
-    resetPasswordSuccess: (state) => state.auth.resetPasswordSuccess,
 };
 
 export default reducer;

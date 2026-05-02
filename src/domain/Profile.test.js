@@ -1,203 +1,102 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-
-// Mock Parse module
-const mockRegisterSubclass = vi.fn();
-
-vi.mock('parse', () => ({
-    default: {
-        Object: class ParseObject {
-            constructor(className) {
-                this.className = className;
-                this.attributes = {};
-            }
-            get(key) { return this.attributes[key]; }
-            set(key, value) { 
-                if (typeof key === 'object') {
-                    Object.assign(this.attributes, key);
-                } else {
-                    this.attributes[key] = value;
-                }
-            }
-            static registerSubclass = mockRegisterSubclass;
-        },
-    },
-}));
+import { describe, it, expect } from 'vitest';
+import Profile from './Profile.js';
 
 describe('Profile Domain Model', () => {
-    let Profile;
-
-    beforeEach(async () => {
-        // Clear module cache and re-import
-        vi.resetModules();
-        Profile = (await import('./Profile.js')).default;
-    });
-
     describe('Basic Properties', () => {
         it('should have correct default values', () => {
             const profile = new Profile();
-            
-            expect(profile.name).toBe('');
-            expect(profile.status).toBe(Profile.STATUS_ACTIVE);
-            expect(profile.pic).toBeNull();
+
+            expect(profile.userId).toBeNull();
+            expect(profile.firstName).toBe('');
+            expect(profile.lastName).toBe('');
             expect(profile.phone).toBe('');
-            expect(profile.email).toBe('');
-            expect(profile.account).toBeUndefined();
         });
 
         it('should set and get properties correctly', () => {
             const profile = new Profile();
-            
-            profile.name = 'John Doe';
-            profile.email = 'john@example.com';
+
+            profile.firstName = 'John';
+            profile.lastName = 'Doe';
             profile.phone = '123-456-7890';
-            profile.status = Profile.STATUS_INACTIVE;
-            
-            expect(profile.name).toBe('John Doe');
-            expect(profile.email).toBe('john@example.com');
+
+            expect(profile.firstName).toBe('John');
+            expect(profile.lastName).toBe('Doe');
             expect(profile.phone).toBe('123-456-7890');
-            expect(profile.status).toBe(Profile.STATUS_INACTIVE);
         });
 
         it('should initialize with provided props', () => {
             const profile = new Profile({
-                name: 'Jane Doe',
-                email: 'jane@example.com',
-                status: Profile.STATUS_ACTIVE,
+                firstName: 'Jane',
+                lastName: 'Doe',
+                userId: 'user-123',
             });
-            
-            expect(profile.name).toBe('Jane Doe');
-            expect(profile.email).toBe('jane@example.com');
-            expect(profile.status).toBe(Profile.STATUS_ACTIVE);
-        });
-    });
 
-    describe('Status Constants', () => {
-        it('should have correct status constants', () => {
-            expect(Profile.STATUS_ACTIVE).toBe('ACTIVE');
-            expect(Profile.STATUS_INACTIVE).toBe('INACTIVE');
-            expect(Profile.STATUSES).toEqual(['ACTIVE', 'INACTIVE']);
-            expect(Profile.STATUS_LABELS[Profile.STATUS_ACTIVE]).toBe('Active');
-            expect(Profile.STATUS_LABELS[Profile.STATUS_INACTIVE]).toBe('Inactive');
+            expect(profile.firstName).toBe('Jane');
+            expect(profile.lastName).toBe('Doe');
+            expect(profile.userId).toBe('user-123');
         });
     });
 
     describe('Initials', () => {
-        it('should generate correct initials from name', () => {
-            const profile = new Profile();
-            
-            profile.name = 'John Doe';
+        it('should generate correct initials from firstName and lastName', () => {
+            const profile = new Profile({ firstName: 'John', lastName: 'Doe' });
             expect(profile.initials).toBe('JD');
-            
-            profile.name = 'Mary Jane Watson';
-            expect(profile.initials).toBe('MJW');
-            
-            profile.name = 'Prince';
-            expect(profile.initials).toBe('P');
-            
-            profile.name = '';
-            expect(profile.initials).toBe('');
-            
-            profile.name = null;
-            expect(profile.initials).toBe('');
         });
 
-        it('should handle names with extra spaces', () => {
+        it('should handle first name only', () => {
+            const profile = new Profile({ firstName: 'Prince' });
+            expect(profile.initials).toBe('P');
+        });
+
+        it('should handle empty names', () => {
             const profile = new Profile();
-            
-            profile.name = '  John   Doe  ';
-            expect(profile.initials).toBe('JD');
+            expect(profile.initials).toBe('');
         });
     });
 
-    describe('Profile Picture URL', () => {
-        it('should return null when no picture is set', () => {
-            const profile = new Profile();
-            expect(profile.picUrl).toBeNull();
+    describe('fullName', () => {
+        it('should return full name', () => {
+            const profile = new Profile({ firstName: 'John', lastName: 'Doe' });
+            expect(profile.fullName).toBe('John Doe');
         });
 
-        it('should return URL when picture has url function', () => {
-            const profile = new Profile();
-            profile.pic = {
-                url: vi.fn(() => 'https://example.com/pic.jpg'),
-            };
-            
-            expect(profile.picUrl).toBe('https://example.com/pic.jpg');
-            expect(profile.pic.url).toHaveBeenCalled();
+        it('should trim when only first name', () => {
+            const profile = new Profile({ firstName: 'John' });
+            expect(profile.fullName).toBe('John');
         });
 
-        it('should return URL when picture has url property', () => {
+        it('should trim when only last name', () => {
+            const profile = new Profile({ lastName: 'Doe' });
+            expect(profile.fullName).toBe('Doe');
+        });
+
+        it('should return empty string with no names', () => {
             const profile = new Profile();
-            profile.pic = {
-                url: 'https://example.com/pic2.jpg',
-            };
-            
-            expect(profile.picUrl).toBe('https://example.com/pic2.jpg');
+            expect(profile.fullName).toBe('');
         });
     });
 
     describe('Validation', () => {
-        it('should be savable with valid data', () => {
-            const profile = new Profile();
-            profile.name = 'John Doe';
-            profile.email = 'john@example.com';
-            profile.status = Profile.STATUS_ACTIVE;
-            
+        it('should be savable with firstName', () => {
+            const profile = new Profile({ firstName: 'John' });
             expect(profile.isSavable()).toBe(true);
         });
 
-        it('should not be savable without name', () => {
+        it('should not be savable without firstName', () => {
             const profile = new Profile();
-            profile.email = 'john@example.com';
-            
             expect(profile.isSavable()).toBe(false);
         });
 
-        it('should not be savable with empty name', () => {
-            const profile = new Profile();
-            profile.name = '   ';
-            profile.email = 'john@example.com';
-            
-            expect(profile.isSavable()).toBe(false);
-        });
-
-        it('should not be savable without email', () => {
-            const profile = new Profile();
-            profile.name = 'John Doe';
-            
-            expect(profile.isSavable()).toBe(false);
-        });
-
-        it('should not be savable with empty email', () => {
-            const profile = new Profile();
-            profile.name = 'John Doe';
-            profile.email = '   ';
-            
-            expect(profile.isSavable()).toBe(false);
-        });
-
-        it('should not be savable with invalid status', () => {
-            const profile = new Profile();
-            profile.name = 'John Doe';
-            profile.email = 'john@example.com';
-            profile.status = 'INVALID_STATUS';
-            
+        it('should not be savable with empty firstName', () => {
+            const profile = new Profile({ firstName: '   ' });
             expect(profile.isSavable()).toBe(false);
         });
     });
 
     describe('toString', () => {
-        it('should return formatted string representation', () => {
-            const profile = new Profile();
-            profile.name = 'John Doe';
-            profile.email = 'john@example.com';
-            
-            expect(profile.toString()).toBe('John Doe <john@example.com>');
-        });
-    });
-
-    describe('Parse Registration', () => {
-        it('should register with Parse as a subclass', () => {
-            expect(mockRegisterSubclass).toHaveBeenCalledWith('Profile', Profile);
+        it('should return full name', () => {
+            const profile = new Profile({ firstName: 'John', lastName: 'Doe' });
+            expect(profile.toString()).toBe('John Doe');
         });
     });
 });

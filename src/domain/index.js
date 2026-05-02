@@ -1,4 +1,10 @@
-// Example domain exports
-// Add your domain classes here as you create them
+export { default as Itinerary } from './Itinerary';
+export { default as ItineraryArray } from './ItineraryArray';
+export { default as Location } from './Location';
+export { default as LocationArray } from './LocationArray';
+export { default as Participant } from './Participant';
+export { default as ParticipantArray } from './ParticipantArray';
+export { default as Plan } from './Plan';
+export { default as PlanArray } from './PlanArray';
 export { default as Profile } from './Profile';
 export { default as ProfileArray } from './ProfileArray';
