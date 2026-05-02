@@ -20,7 +20,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { actions as itineraryActions, selectors as itinerarySelectors } from '../../store/itinerary';
 import { actions as stepActions, selectors as stepSelectors } from '../../store/step';
 import { actions as participantActions, selectors as participantSelectors } from '../../store/participant';
-import { actions as locationActions, selectors as locationSelectors } from '../../store/location';
+import { actions as locationActions } from '../../store/location';
 import Itinerary from '../../domain/Itinerary';
 import ROUTES from '../../router/routes';
 
@@ -38,8 +38,6 @@ const PlanItinerariesScreen = () => {
 
     const steps = useSelector(stepSelectors.list);
     const participants = useSelector(participantSelectors.list);
-    const locations = useSelector(locationSelectors.list);
-
     const [selectedTab, setSelectedTab] = useState(0);
     const [itinDialogOpen, setItinDialogOpen] = useState(false);
     const [working, setWorking] = useState(() => new Itinerary());
@@ -127,9 +125,9 @@ const PlanItinerariesScreen = () => {
         navigate(ROUTES.STEP_CREATE.replace(':planId', planId).replace(':itineraryId', selectedItinerary.id));
     };
 
-    const handleEditStep = (step) => {
+    const handleViewStep = (step) => {
         if (!selectedItinerary?.id) return;
-        navigate(ROUTES.STEP_EDIT.replace(':planId', planId).replace(':itineraryId', selectedItinerary.id).replace(':stepId', step.id));
+        navigate(ROUTES.STEP_DETAILS.replace(':planId', planId).replace(':itineraryId', selectedItinerary.id).replace(':stepId', step.id));
     };
 
     if (itinLoading && !itinLoaded) {
@@ -203,11 +201,10 @@ const PlanItinerariesScreen = () => {
                                             const top = timeToY(step.startTime);
                                             const bottom = Math.max(timeToY(step.endTime), top + 32);
                                             const height = bottom - top;
-                                            const stepLocation = [...locations].find(l => l.id === step.locationId);
                                             return (
                                                 <Box
                                                     key={step.id}
-                                                    onClick={() => handleEditStep(step)}
+                                                    onClick={() => handleViewStep(step)}
                                                     onMouseEnter={() => setHoveredStepId(step.id)}
                                                     onMouseLeave={() => setHoveredStepId(null)}
                                                     sx={{
@@ -226,21 +223,13 @@ const PlanItinerariesScreen = () => {
                                                         py: 0.5,
                                                         overflow: 'hidden',
                                                         transition: 'border-color 0.15s, background-color 0.15s, box-shadow 0.15s',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
                                                     }}
                                                 >
                                                     <Typography sx={{ fontWeight: 700, fontSize: '0.75rem', lineHeight: 1.2 }}>
                                                         {step.name}
                                                     </Typography>
-                                                    <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.6rem' }}>
-                                                        {new Date(step.startTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
-                                                        {' – '}
-                                                        {new Date(step.endTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
-                                                    </Typography>
-                                                    {stepLocation && height > 40 && (
-                                                        <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', fontSize: '0.55rem' }}>
-                                                            {stepLocation.name}
-                                                        </Typography>
-                                                    )}
                                                 </Box>
                                             );
                                         })}

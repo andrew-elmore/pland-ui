@@ -1,3 +1,5 @@
+export { default as DirectionStep } from './DirectionStep';
+export { default as DirectionStepArray } from './DirectionStepArray';
 export { default as Itinerary } from './Itinerary';
 export { default as ItineraryArray } from './ItineraryArray';
 export { default as Location } from './Location';
@@ -8,6 +10,8 @@ export { default as Plan } from './Plan';
 export { default as PlanArray } from './PlanArray';
 export { default as Profile } from './Profile';
 export { default as ProfileArray } from './ProfileArray';
+export { default as Route } from './Route';
+export { default as RouteArray } from './RouteArray';
 export { default as Step } from './Step';
 export { default as StepArray } from './StepArray';
 export { default as Time } from './Time';

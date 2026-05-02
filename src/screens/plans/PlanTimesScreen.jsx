@@ -9,19 +9,15 @@ import {
     ListItem,
     ListItemText,
     IconButton,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    TextField,
     CircularProgress,
     Alert,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import SubdirectoryArrowRightIcon from '@mui/icons-material/SubdirectoryArrowRight';
 import { actions as timeActions, selectors as timeSelectors } from '../../store/time';
+import TimeFormDialog from '../../components/common/TimeFormDialog';
 
 const PlanTimesScreen = () => {
     const { planId } = useParams();
@@ -33,9 +29,8 @@ const PlanTimesScreen = () => {
     const error = useSelector(timeSelectors.error);
 
     const [dialogOpen, setDialogOpen] = useState(false);
-    const [editingId, setEditingId] = useState(null);
-    const [label, setLabel] = useState('');
-    const [datetime, setDatetime] = useState('');
+    const [editingTime, setEditingTime] = useState(null);
+    const [defaultParentTimeId, setDefaultParentTimeId] = useState(null);
 
     useEffect(() => {
         if (planId) {
@@ -43,43 +38,27 @@ const PlanTimesScreen = () => {
         }
     }, [dispatch, planId]);
 
-    const toLocalDatetime = (iso) => {
-        if (!iso) return '';
-        const d = new Date(iso);
-        const pad = (n) => String(n).padStart(2, '0');
-        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-    };
-
-    const handleOpenCreate = () => {
-        setEditingId(null);
-        setLabel('');
-        setDatetime('');
+    const handleOpenCreate = (parent) => {
+        setEditingTime(null);
+        setDefaultParentTimeId(parent?.id ?? null);
         setDialogOpen(true);
     };
 
     const handleOpenEdit = (time) => {
-        setEditingId(time.id);
-        setLabel(time.label || '');
-        setDatetime(toLocalDatetime(time.datetime));
+        setEditingTime(time);
+        setDefaultParentTimeId(null);
         setDialogOpen(true);
     };
 
     const handleClose = () => {
         setDialogOpen(false);
-        setEditingId(null);
-        setLabel('');
-        setDatetime('');
+        setEditingTime(null);
+        setDefaultParentTimeId(null);
     };
 
-    const handleSave = () => {
-        if (!datetime) return;
-        const data = {
-            planId,
-            label: label.trim(),
-            datetime: new Date(datetime).toISOString(),
-        };
-        if (editingId) {
-            dispatch(timeActions.update(editingId, data));
+    const handleSubmitTime = (data) => {
+        if (editingTime) {
+            dispatch(timeActions.update(editingTime.id, data));
         } else {
             dispatch(timeActions.create(data));
         }
@@ -98,11 +77,63 @@ const PlanTimesScreen = () => {
         );
     }
 
+    const timeList = [...times];
+    const rootTimes = timeList.filter(t => !t.parentTimeId);
+    const childrenOf = (id) => timeList.filter(t => t.parentTimeId === id);
+
+    const renderTimeTree = (t, depth = 0) => (
+        <React.Fragment key={t.id}>
+            {renderTimeItem(t, depth)}
+            {childrenOf(t.id).map((child) => renderTimeTree(child, depth + 1))}
+        </React.Fragment>
+    );
+
+    const renderTimeItem = (t, depth = 0) => {
+        const isRoute = t.routeId != null;
+        return (
+            <ListItem
+                key={t.id}
+                sx={{ borderBottom: '1px solid', borderColor: 'divider', py: 1, px: 0, pl: depth * 4 }}
+                secondaryAction={
+                    <Box sx={{ display: 'flex', gap: 0.5 }}>
+                        {!isRoute && (
+                            <IconButton size="small" onClick={() => handleOpenCreate(t)} title="Add dependent">
+                                <AddIcon fontSize="small" />
+                            </IconButton>
+                        )}
+                        <IconButton size="small" onClick={() => handleOpenEdit(t)}>
+                            <EditIcon fontSize="small" />
+                        </IconButton>
+                        {!isRoute && (
+                            <IconButton size="small" onClick={() => handleRemove(t.id)}>
+                                <DeleteIcon fontSize="small" />
+                            </IconButton>
+                        )}
+                    </Box>
+                }
+            >
+                {depth > 0 && <SubdirectoryArrowRightIcon fontSize="small" sx={{ mr: 1, color: 'text.disabled' }} />}
+                <ListItemText
+                    primary={
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <span>{t.displayLabel}</span>
+                            {t.parentTimeId && t.offsetDisplay && (
+                                <Typography variant="caption" color="text.secondary">({t.offsetDisplay})</Typography>
+                            )}
+                        </Box>
+                    }
+                    secondary={new Date(t.datetime).toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                    slotProps={{ secondary: { sx: { fontSize: '0.75rem' } } }}
+                />
+            </ListItem>
+        );
+    };
+
     return (
         <>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
                 <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Times</Typography>
-                <Button variant="outlined" size="small" startIcon={<AddIcon />} onClick={handleOpenCreate} sx={{ borderRadius: '20px', textTransform: 'none', fontWeight: 600 }}>
+                <Button variant="outlined" size="small" startIcon={<AddIcon />} onClick={() => handleOpenCreate(null)} sx={{ borderRadius: '20px', textTransform: 'none', fontWeight: 600 }}>
                     Add
                 </Button>
             </Box>
@@ -117,66 +148,20 @@ const PlanTimesScreen = () => {
 
             {times.length > 0 && (
                 <List disablePadding>
-                    {[...times].map((t) => (
-                        <ListItem
-                            key={t.id}
-                            sx={{ borderBottom: '1px solid', borderColor: 'divider', py: 1, px: 0 }}
-                            secondaryAction={
-                                <Box sx={{ display: 'flex', gap: 0.5 }}>
-                                    <IconButton size="small" onClick={() => handleOpenEdit(t)}>
-                                        <EditIcon fontSize="small" />
-                                    </IconButton>
-                                    <IconButton size="small" onClick={() => handleRemove(t.id)}>
-                                        <DeleteIcon fontSize="small" />
-                                    </IconButton>
-                                </Box>
-                            }
-                        >
-                            <ListItemText
-                                primary={t.displayLabel}
-                                secondary={new Date(t.datetime).toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
-                                slotProps={{ secondary: { sx: { fontSize: '0.75rem' } } }}
-                            />
-                        </ListItem>
-                    ))}
+                    {rootTimes.map((t) => renderTimeTree(t, 0))}
                 </List>
             )}
 
-            <Dialog open={dialogOpen} onClose={handleClose} maxWidth="xs" fullWidth disableRestoreFocus>
-                <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}>
-                    {editingId ? 'Edit Time' : 'Add Time'}
-                    <IconButton onClick={handleClose} edge="end" size="small">
-                        <CloseIcon fontSize="small" />
-                    </IconButton>
-                </DialogTitle>
-                <DialogContent sx={{ pt: 1 }}>
-                    <TextField
-                        autoFocus
-                        label="Label"
-                        fullWidth
-                        size="small"
-                        value={label}
-                        onChange={(e) => setLabel(e.target.value)}
-                        placeholder="e.g. Party Starts"
-                        sx={{ mt: 1, mb: 1.5 }}
-                    />
-                    <TextField
-                        label="Date & Time"
-                        type="datetime-local"
-                        fullWidth
-                        size="small"
-                        value={datetime}
-                        onChange={(e) => setDatetime(e.target.value)}
-                        slotProps={{ inputLabel: { shrink: true } }}
-                    />
-                </DialogContent>
-                <DialogActions sx={{ px: 2, pb: 1.5 }}>
-                    <Button variant="outlined" size="small" onClick={handleClose} sx={{ borderRadius: '20px', textTransform: 'none' }}>Cancel</Button>
-                    <Button variant="contained" size="small" onClick={handleSave} disabled={isMutating || !datetime} sx={{ borderRadius: '20px', textTransform: 'none', fontWeight: 600 }}>
-                        {editingId ? 'Save' : 'Add'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
+            <TimeFormDialog
+                open={dialogOpen}
+                onClose={handleClose}
+                planId={planId}
+                times={times}
+                editingTime={editingTime}
+                defaultParentTimeId={defaultParentTimeId}
+                onSubmit={handleSubmitTime}
+                isSaving={isMutating}
+            />
         </>
     );
 };

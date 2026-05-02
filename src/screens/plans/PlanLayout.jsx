@@ -17,6 +17,7 @@ import MapIcon from '@mui/icons-material/Map';
 import PeopleIcon from '@mui/icons-material/People';
 import PlaceIcon from '@mui/icons-material/Place';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import DirectionsIcon from '@mui/icons-material/Directions';
 import { actions as planActions, selectors as planSelectors } from '../../store/plan';
 import ROUTES from '../../router/routes';
 
@@ -25,6 +26,7 @@ const NAV_WIDTH = 200;
 const navItems = [
     { label: 'Itineraries', icon: <MapIcon fontSize="small" />, path: 'itineraries' },
     { label: 'Times', icon: <AccessTimeIcon fontSize="small" />, path: 'times' },
+    { label: 'Routes', icon: <DirectionsIcon fontSize="small" />, path: 'routes' },
     { label: 'Locations', icon: <PlaceIcon fontSize="small" />, path: 'locations' },
     { label: 'Participants', icon: <PeopleIcon fontSize="small" />, path: 'participants' },
 ];
