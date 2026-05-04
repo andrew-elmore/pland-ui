@@ -5,6 +5,7 @@ import ROUTES from './routes';
 import HomeScreen from '../screens/HomeScreen';
 import PlanLayout from '../screens/plans/PlanLayout';
 import PlanItinerariesScreen from '../screens/plans/PlanItinerariesScreen';
+import PlanGroupsScreen from '../screens/plans/PlanGroupsScreen';
 import PlanParticipantsScreen from '../screens/plans/PlanParticipantsScreen';
 import PlanLocationsScreen from '../screens/plans/PlanLocationsScreen';
 import PlanTimesScreen from '../screens/plans/PlanTimesScreen';
@@ -29,6 +30,7 @@ const AppRouter = () => {
                 <Route path="times" element={<PlanTimesScreen />} />
                 <Route path="routes" element={<PlanRoutesScreen />} />
                 <Route path="routes/:routeId" element={<PlanRouteDetailsScreen />} />
+                <Route path="groups" element={<PlanGroupsScreen />} />
                 <Route path="participants" element={<PlanParticipantsScreen />} />
                 <Route path="locations" element={<PlanLocationsScreen />} />
             </Route>

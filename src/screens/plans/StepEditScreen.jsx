@@ -14,16 +14,21 @@ import {
     ToggleButtonGroup,
     ToggleButton,
     Chip,
+    IconButton,
+    CircularProgress,
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
 import DirectionsIcon from '@mui/icons-material/Directions';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import EditIcon from '@mui/icons-material/Edit';
 import { actions as stepActions, selectors as stepSelectors } from '../../store/step';
 import { actions as participantActions, selectors as participantSelectors } from '../../store/participant';
+import { actions as groupActions, selectors as groupSelectors } from '../../store/group';
 import { actions as locationActions, selectors as locationSelectors } from '../../store/location';
 import { actions as timeActions, selectors as timeSelectors } from '../../store/time';
 import useMutateEffect from '../../hooks/useMutateEffect';
 import ROUTES from '../../router/routes';
 import Route from '../../domain/Route';
+import * as routeService from '../../services/route';
 import TimeFormDialog from '../../components/common/TimeFormDialog';
 
 const StepEditScreen = () => {
@@ -35,6 +40,7 @@ const StepEditScreen = () => {
     const { isLoading, isLoaded, isMutating } = useSelector(stepSelectors.currentMeta);
     const error = useSelector(stepSelectors.error);
     const participants = useSelector(participantSelectors.list);
+    const groups = useSelector(groupSelectors.list);
     const locations = useSelector(locationSelectors.list);
     const times = useSelector(timeSelectors.list);
 
@@ -54,13 +60,18 @@ const StepEditScreen = () => {
     const [timeMode, setTimeMode] = useState(Route.TIME_MODE_DEPART_AT);
     const [paddingHours, setPaddingHours] = useState('');
     const [paddingMinutes, setPaddingMinutes] = useState('');
+    const [routeOptions, setRouteOptions] = useState([]);
+    const [selectedRouteIdx, setSelectedRouteIdx] = useState(null);
+    const [previewLoading, setPreviewLoading] = useState(false);
+    const [initialRouteFields, setInitialRouteFields] = useState(null);
 
     const [timeDialogOpen, setTimeDialogOpen] = useState(false);
-    const [timeDialogTarget, setTimeDialogTarget] = useState(null);
+    const [editingTime, setEditingTime] = useState(null);
 
     useEffect(() => {
         if (planId) {
             dispatch(participantActions.list(planId));
+            dispatch(groupActions.list(planId));
             dispatch(locationActions.list(planId));
             dispatch(timeActions.list(planId));
         }
@@ -87,6 +98,14 @@ const StepEditScreen = () => {
                 setTransitModes(step.route.transitModes || []);
                 setTimeMode(step.route.timeMode);
                 setRouteTimeId(step.route.timeMode === 'depart_at' ? step.startTimeId : step.endTimeId);
+                setInitialRouteFields({
+                    originLocationId: step.route.originLocationId,
+                    destinationLocationId: step.route.destinationLocationId,
+                    travelMode: step.route.travelMode,
+                    transitModesKey: (step.route.transitModes || []).join(','),
+                    timeMode: step.route.timeMode,
+                    routeTimeId: step.route.timeMode === 'depart_at' ? step.startTimeId : step.endTimeId,
+                });
                 const computedTimeId = step.route.timeMode === 'depart_at' ? step.endTimeId : step.startTimeId;
                 const computedTime = [...times].find(t => t.id === computedTimeId);
                 if (!computedTime) return;
@@ -100,6 +119,13 @@ const StepEditScreen = () => {
         }
     }, [step, stepId, initialized, times]);
 
+    const transitModesKey = transitModes.join(',');
+    useEffect(() => {
+        if (!initialized) return;
+        setRouteOptions([]);
+        setSelectedRouteIdx(null);
+    }, [initialized, originLocationId, destinationLocationId, travelMode, transitModesKey, timeMode, routeTimeId]);
+
     const submit = useMutateEffect(isMutating, error, {
         onSuccess: () => {
             navigate(ROUTES.PLAN_ITINERARIES.replace(':planId', planId));
@@ -111,7 +137,8 @@ const StepEditScreen = () => {
 
         if (isRouteStep) {
             if (!originLocationId || !destinationLocationId || !routeTimeId) return;
-            submit(stepActions.update(stepId, {
+            if (routeChanged && selectedRouteIdx === null) return;
+            const payload = {
                 name: stepName.trim(),
                 participantIds: stepParticipantIds,
                 originLocationId,
@@ -121,7 +148,9 @@ const StepEditScreen = () => {
                 timeId: routeTimeId,
                 timeMode,
                 paddingSeconds: (parseInt(paddingHours, 10) || 0) * 3600 + (parseInt(paddingMinutes, 10) || 0) * 60,
-            }));
+            };
+            if (routeChanged) payload.routeData = routeOptions[selectedRouteIdx];
+            submit(stepActions.update(stepId, payload));
         } else {
             if (!stepStartTimeId || !stepEndTimeId) return;
             submit(stepActions.update(stepId, {
@@ -160,21 +189,41 @@ const StepEditScreen = () => {
         setIsRouteStep(!isRouteStep);
     };
 
-    const handleOpenTimeDialog = (target) => {
-        setTimeDialogTarget(target);
-        setTimeDialogOpen(true);
+    const handlePreview = async () => {
+        if (!originLocationId || !destinationLocationId || !routeTimeId) return;
+        setPreviewLoading(true);
+        try {
+            const timeList = [...times];
+            const routes = await routeService.preview({
+                originLocationId,
+                destinationLocationId,
+                travelMode,
+                transitModes,
+                datetime: timeList.find(t => t.id === routeTimeId)?.datetime,
+                timeMode,
+            });
+            setRouteOptions(routes);
+            if (routes.length === 1) setSelectedRouteIdx(0);
+        } catch (err) {
+            console.error(err);
+        }
+        setPreviewLoading(false);
+    };
+
+    const handleEditTime = (timeId) => {
+        const time = [...times].find(t => t.id === timeId);
+        if (time) {
+            setEditingTime(time);
+            setTimeDialogOpen(true);
+        }
     };
 
     const handleSubmitTime = (data) => {
-        dispatch(timeActions.create(data)).then((action) => {
-            if (action.type.endsWith('_FULFILLED')) {
-                const newId = action.payload.id;
-                if (timeDialogTarget === 'start') setStepStartTimeId(newId);
-                if (timeDialogTarget === 'end') setStepEndTimeId(newId);
-                if (timeDialogTarget === 'route') setRouteTimeId(newId);
-            }
-        });
+        if (editingTime) {
+            dispatch(timeActions.update(editingTime.id, data));
+        }
         setTimeDialogOpen(false);
+        setEditingTime(null);
     };
 
     if (isLoading && !isLoaded) {
@@ -190,13 +239,40 @@ const StepEditScreen = () => {
     }
 
     const participantList = [...participants];
+    const groupList = [...groups];
     const timeList = [...times];
     const locationList = [...locations];
+
+    const groupedOptions = [];
+    groupList.forEach((g) => {
+        const memberIds = g.participantIds || [];
+        const members = participantList.filter(p => memberIds.includes(p.id));
+        if (members.length > 0) {
+            groupedOptions.push({ type: 'group', group: g, id: `group-${g.id}` });
+            members.forEach(p => groupedOptions.push({ type: 'participant', participant: p, groupName: g.name, id: p.id }));
+        }
+    });
+    const groupedIds = new Set(groupList.flatMap(g => g.participantIds || []));
+    const ungrouped = participantList.filter(p => !groupedIds.has(p.id));
+    if (ungrouped.length > 0) {
+        ungrouped.forEach(p => groupedOptions.push({ type: 'participant', participant: p, groupName: 'All', id: p.id }));
+    }
+
+    const routeChanged = initialized && isRouteStep && (
+        initialRouteFields === null || (
+            originLocationId !== initialRouteFields.originLocationId ||
+            destinationLocationId !== initialRouteFields.destinationLocationId ||
+            travelMode !== initialRouteFields.travelMode ||
+            transitModes.join(',') !== initialRouteFields.transitModesKey ||
+            timeMode !== initialRouteFields.timeMode ||
+            routeTimeId !== initialRouteFields.routeTimeId
+        )
+    );
 
     const isSubmitDisabled = isMutating
         || !stepName.trim()
         || stepParticipantIds.length === 0
-        || (isRouteStep ? (!originLocationId || !destinationLocationId || !routeTimeId) : (!stepStartTimeId || !stepEndTimeId));
+        || (isRouteStep ? (!originLocationId || !destinationLocationId || !routeTimeId || (routeChanged && selectedRouteIdx === null)) : (!stepStartTimeId || !stepEndTimeId));
 
     return (
         <Container maxWidth="sm">
@@ -226,18 +302,55 @@ const StepEditScreen = () => {
 
                     <Autocomplete
                         multiple
-                        options={participantList}
-                        getOptionLabel={(option) => option.fullName || `${option.firstName} ${option.lastName}`.trim()}
-                        value={participantList.filter(p => stepParticipantIds.includes(p.id))}
-                        onChange={(_, value) => setStepParticipantIds(value.map(p => p.id))}
+                        options={groupedOptions}
+                        getOptionLabel={(option) => {
+                            if (option.type === 'group') return option.group.name;
+                            return option.participant.fullName || `${option.participant.firstName} ${option.participant.lastName}`.trim();
+                        }}
+                        value={groupedOptions.filter(o => o.type === 'participant' && stepParticipantIds.includes(o.id))}
+                        onChange={(_, value, reason, details) => {
+                            if (details?.option?.type === 'group') {
+                                const memberIds = (details.option.group.participantIds || []).filter(id => participantList.some(p => p.id === id));
+                                if (reason === 'selectOption') {
+                                    setStepParticipantIds((prev) => [...new Set([...prev, ...memberIds])]);
+                                } else if (reason === 'removeOption') {
+                                    setStepParticipantIds((prev) => prev.filter(id => !memberIds.includes(id)));
+                                }
+                            } else {
+                                setStepParticipantIds(value.filter(o => o.type === 'participant').map(o => o.id));
+                            }
+                        }}
                         isOptionEqualToValue={(a, b) => a.id === b.id}
                         disableCloseOnSelect
-                        renderOption={(props, option, { selected }) => (
-                            <li {...props} key={option.id}>
-                                <Checkbox size="small" checked={selected} sx={{ mr: 0.5, p: 0.25 }} />
-                                {option.fullName || `${option.firstName} ${option.lastName}`.trim()}
-                            </li>
-                        )}
+                        renderOption={(props, option, { selected }) => {
+                            if (option.type === 'group') {
+                                const memberIds = (option.group.participantIds || []).filter(id => participantList.some(p => p.id === id));
+                                const allSelected = memberIds.length > 0 && memberIds.every(id => stepParticipantIds.includes(id));
+                                const someSelected = memberIds.some(id => stepParticipantIds.includes(id));
+                                return (
+                                    <li {...props} key={option.id} style={{ fontWeight: 700 }}>
+                                        <Checkbox size="small" checked={allSelected} indeterminate={someSelected && !allSelected} sx={{ mr: 0.5, p: 0.25 }} />
+                                        {option.group.name}
+                                    </li>
+                                );
+                            }
+                            return (
+                                <li {...props} key={option.id} style={{ paddingLeft: 32 }}>
+                                    <Checkbox size="small" checked={selected} sx={{ mr: 0.5, p: 0.25 }} />
+                                    {option.participant.fullName || `${option.participant.firstName} ${option.participant.lastName}`.trim()}
+                                </li>
+                            );
+                        }}
+                        renderTags={(value, getTagProps) =>
+                            value.filter(o => o.type === 'participant').map((option, index) => (
+                                <Chip
+                                    {...getTagProps({ index })}
+                                    key={option.id}
+                                    label={option.participant.fullName || `${option.participant.firstName} ${option.participant.lastName}`.trim()}
+                                    size="small"
+                                />
+                            ))
+                        }
                         renderInput={(params) => (
                             <TextField {...params} label="Participants" size="small" />
                         )}
@@ -330,28 +443,32 @@ const StepEditScreen = () => {
                                 </ToggleButtonGroup>
                             </Box>
 
-                            <Box sx={{ display: 'flex', gap: 1, mt: 2, alignItems: 'flex-end' }}>
+                            {routeTimeId ? (
+                                <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, gap: 0.5 }}>
+                                    <Typography variant="body2" sx={{ flex: 1 }}>
+                                        {timeList.find(t => t.id === routeTimeId)?.displayLabel || ''}
+                                    </Typography>
+                                    <IconButton size="small" onClick={() => setRouteTimeId(null)}>
+                                        <SwapHorizIcon fontSize="small" />
+                                    </IconButton>
+                                    <IconButton size="small" onClick={() => handleEditTime(routeTimeId)}>
+                                        <EditIcon fontSize="small" />
+                                    </IconButton>
+                                </Box>
+                            ) : (
                                 <Autocomplete
                                     options={timeList}
                                     getOptionLabel={(option) => option.displayLabel || ''}
-                                    value={timeList.find(t => t.id === routeTimeId) ?? null}
+                                    value={null}
                                     onChange={(_, value) => setRouteTimeId(value?.id ?? null)}
                                     isOptionEqualToValue={(a, b) => a.id === b.id}
                                     renderInput={(params) => (
                                         <TextField {...params} label={timeMode === 'depart_at' ? 'Departure Time' : 'Arrival Time'} size="small" />
                                     )}
                                     size="small"
-                                    sx={{ flex: 1 }}
+                                    sx={{ mt: 2 }}
                                 />
-                                <Button
-                                    variant="outlined"
-                                    size="small"
-                                    onClick={() => handleOpenTimeDialog('route')}
-                                    sx={{ minWidth: 36, px: 1, height: 40 }}
-                                >
-                                    <AddIcon fontSize="small" />
-                                </Button>
-                            </Box>
+                            )}
 
                             <Box sx={{ display: 'flex', gap: 1, mt: 2, alignItems: 'center' }}>
                                 <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
@@ -376,6 +493,47 @@ const StepEditScreen = () => {
                                     sx={{ width: 80 }}
                                 />
                             </Box>
+
+                            {routeChanged && originLocationId && destinationLocationId && routeTimeId && (
+                                <Button
+                                    variant="outlined"
+                                    size="small"
+                                    onClick={handlePreview}
+                                    disabled={previewLoading}
+                                    startIcon={previewLoading ? <CircularProgress size={16} /> : null}
+                                    sx={{ mt: 2, borderRadius: '20px', textTransform: 'none', fontWeight: 600 }}
+                                    fullWidth
+                                >
+                                    {previewLoading ? 'Loading...' : routeOptions.length > 0 ? 'Refresh Routes' : 'Preview Routes'}
+                                </Button>
+                            )}
+
+                            {routeOptions.length > 0 && (
+                                <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                    {routeOptions.map((option, idx) => (
+                                        <Box
+                                            key={idx}
+                                            onClick={() => setSelectedRouteIdx(idx)}
+                                            sx={{
+                                                p: 1.5,
+                                                border: '2px solid',
+                                                borderColor: selectedRouteIdx === idx ? 'primary.main' : 'divider',
+                                                borderRadius: '8px',
+                                                cursor: 'pointer',
+                                                backgroundColor: selectedRouteIdx === idx ? 'action.selected' : 'transparent',
+                                                '&:hover': { backgroundColor: selectedRouteIdx === idx ? 'action.selected' : 'action.hover' },
+                                            }}
+                                        >
+                                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                                {option.summary || `Route ${idx + 1}`}
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                {Math.round(option.durationSeconds / 60)} min · {(option.distanceMeters / 1000).toFixed(1)} km
+                                            </Typography>
+                                        </Box>
+                                    ))}
+                                </Box>
+                            )}
 
                             <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
                                 <Button
@@ -414,51 +572,59 @@ const StepEditScreen = () => {
                                 </Button>
                             </Box>
 
-                            <Box sx={{ display: 'flex', gap: 1, mt: 2, alignItems: 'flex-end' }}>
+                            {stepStartTimeId ? (
+                                <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, gap: 0.5 }}>
+                                    <Typography variant="body2" sx={{ flex: 1 }}>
+                                        {timeList.find(t => t.id === stepStartTimeId)?.displayLabel || ''}
+                                    </Typography>
+                                    <IconButton size="small" onClick={() => setStepStartTimeId(null)}>
+                                        <SwapHorizIcon fontSize="small" />
+                                    </IconButton>
+                                    <IconButton size="small" onClick={() => handleEditTime(stepStartTimeId)}>
+                                        <EditIcon fontSize="small" />
+                                    </IconButton>
+                                </Box>
+                            ) : (
                                 <Autocomplete
                                     options={timeList}
                                     getOptionLabel={(option) => option.displayLabel || ''}
-                                    value={timeList.find(t => t.id === stepStartTimeId) ?? null}
+                                    value={null}
                                     onChange={(_, value) => setStepStartTimeId(value?.id ?? null)}
                                     isOptionEqualToValue={(a, b) => a.id === b.id}
                                     renderInput={(params) => (
                                         <TextField {...params} label="Start Time" size="small" />
                                     )}
                                     size="small"
-                                    sx={{ flex: 1 }}
+                                    sx={{ mt: 2 }}
                                 />
-                                <Button
-                                    variant="outlined"
-                                    size="small"
-                                    onClick={() => handleOpenTimeDialog('start')}
-                                    sx={{ minWidth: 36, px: 1, height: 40 }}
-                                >
-                                    <AddIcon fontSize="small" />
-                                </Button>
-                            </Box>
+                            )}
 
-                            <Box sx={{ display: 'flex', gap: 1, mt: 2, alignItems: 'flex-end' }}>
+                            {stepEndTimeId ? (
+                                <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, gap: 0.5 }}>
+                                    <Typography variant="body2" sx={{ flex: 1 }}>
+                                        {timeList.find(t => t.id === stepEndTimeId)?.displayLabel || ''}
+                                    </Typography>
+                                    <IconButton size="small" onClick={() => setStepEndTimeId(null)}>
+                                        <SwapHorizIcon fontSize="small" />
+                                    </IconButton>
+                                    <IconButton size="small" onClick={() => handleEditTime(stepEndTimeId)}>
+                                        <EditIcon fontSize="small" />
+                                    </IconButton>
+                                </Box>
+                            ) : (
                                 <Autocomplete
                                     options={timeList}
                                     getOptionLabel={(option) => option.displayLabel || ''}
-                                    value={timeList.find(t => t.id === stepEndTimeId) ?? null}
+                                    value={null}
                                     onChange={(_, value) => setStepEndTimeId(value?.id ?? null)}
                                     isOptionEqualToValue={(a, b) => a.id === b.id}
                                     renderInput={(params) => (
                                         <TextField {...params} label="End Time" size="small" />
                                     )}
                                     size="small"
-                                    sx={{ flex: 1 }}
+                                    sx={{ mt: 2 }}
                                 />
-                                <Button
-                                    variant="outlined"
-                                    size="small"
-                                    onClick={() => handleOpenTimeDialog('end')}
-                                    sx={{ minWidth: 36, px: 1, height: 40 }}
-                                >
-                                    <AddIcon fontSize="small" />
-                                </Button>
-                            </Box>
+                            )}
                         </>
                     )}
 
@@ -486,9 +652,10 @@ const StepEditScreen = () => {
 
             <TimeFormDialog
                 open={timeDialogOpen}
-                onClose={() => setTimeDialogOpen(false)}
+                onClose={() => { setTimeDialogOpen(false); setEditingTime(null); }}
                 planId={planId}
                 times={times}
+                editingTime={editingTime}
                 onSubmit={handleSubmitTime}
             />
         </Container>

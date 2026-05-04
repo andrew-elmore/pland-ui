@@ -1,5 +1,7 @@
 export { default as DirectionStep } from './DirectionStep';
 export { default as DirectionStepArray } from './DirectionStepArray';
+export { default as Group } from './Group';
+export { default as GroupArray } from './GroupArray';
 export { default as Itinerary } from './Itinerary';
 export { default as ItineraryArray } from './ItineraryArray';
 export { default as Location } from './Location';

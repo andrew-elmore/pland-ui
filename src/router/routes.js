@@ -9,6 +9,7 @@ export const ROUTES = {
     PLAN_TIMES: '/plans/:planId/times',
     PLAN_ROUTES: '/plans/:planId/routes',
     PLAN_ROUTE_DETAILS: '/plans/:planId/routes/:routeId',
+    PLAN_GROUPS: '/plans/:planId/groups',
     PLAN_PARTICIPANTS: '/plans/:planId/participants',
     PLAN_LOCATIONS: '/plans/:planId/locations',
 

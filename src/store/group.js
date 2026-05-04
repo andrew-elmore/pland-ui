@@ -1,22 +1,22 @@
 import { createSelector } from '@reduxjs/toolkit';
-import * as stepService from '../services/step';
-import { Step, StepArray } from '../domain';
+import * as groupService from '../services/group';
+import { Group, GroupArray } from '../domain';
 
-const LIST = 'LIST_STEPS';
-const GET = 'GET_STEP';
-const CREATE = 'CREATE_STEP';
-const UPDATE = 'UPDATE_STEP';
-const DELETE = 'DELETE_STEP';
+const LIST = 'LIST_GROUPS';
+const GET = 'GET_GROUP';
+const CREATE = 'CREATE_GROUP';
+const UPDATE = 'UPDATE_GROUP';
+const DELETE = 'DELETE_GROUP';
 
 const initialState = {
     list: {
-        data: new StepArray(),
+        data: new GroupArray(),
         totalCount: 0,
         isLoading: false,
         isLoaded: false,
     },
     current: {
-        data: new Step(),
+        data: new Group(),
         isLoading: false,
         isLoaded: false,
         isMutating: false,
@@ -47,7 +47,7 @@ export function reducer(state = initialState, action) {
         return {
             ...state,
             list: {
-                data: new StepArray(payload?.items ?? []),
+                data: new GroupArray(payload?.items ?? []),
                 totalCount: payload?.totalCount ?? 0,
                 isLoading: false,
                 isLoaded: true,
@@ -63,7 +63,7 @@ export function reducer(state = initialState, action) {
                 isLoading: false,
                 isLoaded: true,
             },
-            error: payload?.message ?? 'Failed to load steps',
+            error: payload?.message ?? 'Failed to load groups',
         };
     }
 
@@ -83,7 +83,7 @@ export function reducer(state = initialState, action) {
             ...state,
             current: {
                 ...state.current,
-                data: new Step(payload),
+                data: new Group(payload),
                 isLoading: false,
                 isLoaded: true,
             },
@@ -98,7 +98,7 @@ export function reducer(state = initialState, action) {
                 isLoading: false,
                 isLoaded: true,
             },
-            error: payload?.message ?? 'Step not found',
+            error: payload?.message ?? 'Group not found',
         };
     }
 
@@ -124,7 +124,7 @@ export function reducer(state = initialState, action) {
                 totalCount: state.list.totalCount + 1,
             },
             current: {
-                data: new Step(data),
+                data: new Group(data),
                 isLoading: false,
                 isLoaded: true,
                 isMutating: false,
@@ -141,7 +141,7 @@ export function reducer(state = initialState, action) {
                 data: state.list.data.clone().addUpdate(data),
             },
             current: {
-                data: new Step(data),
+                data: new Group(data),
                 isLoading: false,
                 isLoaded: true,
                 isMutating: false,
@@ -157,7 +157,7 @@ export function reducer(state = initialState, action) {
                 ...state.current,
                 isMutating: false,
             },
-            error: payload?.message ?? 'Failed to save step',
+            error: payload?.message ?? 'Failed to save group',
         };
     }
 
@@ -193,7 +193,7 @@ export function reducer(state = initialState, action) {
                 ...state.current,
                 isMutating: false,
             },
-            error: payload?.message ?? 'Failed to remove step',
+            error: payload?.message ?? 'Failed to remove group',
         };
     }
 
@@ -204,64 +204,58 @@ export function reducer(state = initialState, action) {
 }
 
 export const actions = {
-    list: (itineraryId) => ({
+    list: (planId) => ({
         type: LIST,
-        meta: { itineraryId },
-        payload: stepService.list(itineraryId),
+        meta: { planId },
+        payload: groupService.list(planId),
     }),
 
     get: (id) => ({
         type: GET,
         meta: { id },
-        payload: stepService.get(id),
+        payload: groupService.get(id),
     }),
 
     create: (data) => ({
         type: CREATE,
         meta: { data },
-        payload: stepService.create(data),
-    }),
-
-    createWithDuration: (data) => ({
-        type: CREATE,
-        meta: { data },
-        payload: stepService.createWithDuration(data),
+        payload: groupService.create(data),
     }),
 
     update: (id, data) => ({
         type: UPDATE,
         meta: { id, data },
-        payload: stepService.update(id, data),
+        payload: groupService.update(id, data),
     }),
 
     remove: (id) => ({
         type: DELETE,
         meta: { id },
-        payload: stepService.remove(id),
+        payload: groupService.remove(id),
     }),
 };
 
 export const selectors = {
-    list: (state) => state.step.list.data,
+    list: (state) => state.group.list.data,
     listMeta: createSelector(
         [
-            (state) => state.step.list.isLoading,
-            (state) => state.step.list.isLoaded,
-            (state) => state.step.list.totalCount,
+            (state) => state.group.list.isLoading,
+            (state) => state.group.list.isLoaded,
+            (state) => state.group.list.totalCount,
         ],
         (isLoading, isLoaded, totalCount) => ({ isLoading, isLoaded, totalCount }),
     ),
-    current: (state) => state.step.current.data,
+    current: (state) => state.group.current.data,
     currentMeta: createSelector(
         [
-            (state) => state.step.current.isLoading,
-            (state) => state.step.current.isLoaded,
-            (state) => state.step.current.isMutating,
+            (state) => state.group.current.isLoading,
+            (state) => state.group.current.isLoaded,
+            (state) => state.group.current.isMutating,
         ],
         (isLoading, isLoaded, isMutating) => ({ isLoading, isLoaded, isMutating }),
     ),
-    isMutating: (state) => state.step.current.isMutating,
-    error: (state) => state.step.error,
+    isMutating: (state) => state.group.current.isMutating,
+    error: (state) => state.group.error,
 };
 
 export default reducer;

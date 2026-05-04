@@ -155,8 +155,8 @@ const PlanItinerariesScreen = () => {
     const participantList = [...participants];
 
     return (
-        <>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: 1, borderColor: 'divider' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', m: -2, height: 'calc(100vh - 64px)' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: 1, borderColor: 'divider', flexShrink: 0 }}>
                 <Tabs value={selectedTab < itineraries.length ? selectedTab : false} onChange={handleTabChange} variant="scrollable" scrollButtons="auto">
                     {itineraries.map((itinerary) => (
                         <Tab key={itinerary.id} label={itinerary.name} />
@@ -171,7 +171,7 @@ const PlanItinerariesScreen = () => {
             </Box>
 
             {selectedItinerary && participantList.length > 0 && (
-                <Box sx={{ overflow: 'auto', mt: 1, flex: 1 }}>
+                <Box sx={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
                     <Box sx={{ display: 'flex', minWidth: TIME_COL_WIDTH + participantList.length * 180 }}>
                         <Box sx={{ width: TIME_COL_WIDTH, flexShrink: 0, pt: '36px' }}>
                             <Box sx={{ position: 'relative', height: totalHeight }}>
@@ -183,59 +183,42 @@ const PlanItinerariesScreen = () => {
                             </Box>
                         </Box>
 
-                        {participantList.map((p) => (
-                            <Box key={p.id} sx={{ flex: 1, minWidth: 150, borderLeft: '1px solid', borderColor: 'divider' }}>
-                                <Box sx={{ height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid', borderColor: 'divider' }}>
-                                    <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.7rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', px: 1 }}>
-                                        {p.fullName || `${p.firstName} ${p.lastName}`.trim()}
-                                    </Typography>
-                                </Box>
-                                <Box sx={{ position: 'relative', height: totalHeight }}>
-                                    {hourMarkers.map((m, i) => (
-                                        <Box key={i} sx={{ position: 'absolute', top: m.y, left: 0, right: 0, borderTop: '1px solid', borderColor: 'divider', opacity: 0.3 }} />
-                                    ))}
+                        {participantList.map((p) => {
+                            const pSteps = [...steps].filter((s) => (s.participantIds ?? []).includes(p.id));
+                            const pEndTimeIds = new Set(pSteps.map((s) => s.endTimeId).filter(Boolean));
+                            const pStartTimeIds = new Set(pSteps.map((s) => s.startTimeId).filter(Boolean));
+                            const createUrl = ROUTES.STEP_CREATE.replace(':planId', planId).replace(':itineraryId', selectedItinerary.id);
+                            return (
+                                <Box key={p.id} sx={{ flex: 1, minWidth: 150, borderLeft: '1px solid', borderColor: 'divider' }}>
+                                    <Box sx={{ height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid', borderColor: 'divider' }}>
+                                        <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.7rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', px: 1 }}>
+                                            {p.fullName || `${p.firstName} ${p.lastName}`.trim()}
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ position: 'relative', height: totalHeight }}>
+                                        {hourMarkers.map((m, i) => (
+                                            <Box key={i} sx={{ position: 'absolute', top: m.y, left: 0, right: 0, borderTop: '1px solid', borderColor: 'divider', opacity: 0.3 }} />
+                                        ))}
 
-                                    {[...steps]
-                                        .filter((step) => (step.participantIds ?? []).includes(p.id))
-                                        .map((step) => {
-                                            const top = timeToY(step.startTime);
-                                            const bottom = Math.max(timeToY(step.endTime), top + 32);
-                                            const height = bottom - top;
-                                            return (
-                                                <Box
-                                                    key={step.id}
-                                                    onClick={() => handleViewStep(step)}
-                                                    onMouseEnter={() => setHoveredStepId(step.id)}
-                                                    onMouseLeave={() => setHoveredStepId(null)}
-                                                    sx={{
-                                                        position: 'absolute',
-                                                        top,
-                                                        left: 4,
-                                                        right: 4,
-                                                        height,
-                                                        borderRadius: '6px',
-                                                        border: '1px solid',
-                                                        borderColor: hoveredStepId === step.id ? 'primary.main' : 'divider',
-                                                        backgroundColor: hoveredStepId === step.id ? 'action.selected' : 'action.hover',
-                                                        boxShadow: hoveredStepId === step.id ? '0 0 8px 2px rgba(144,202,249,0.4)' : 'none',
-                                                        cursor: 'pointer',
-                                                        px: 1,
-                                                        py: 0.5,
-                                                        overflow: 'hidden',
-                                                        transition: 'border-color 0.15s, background-color 0.15s, box-shadow 0.15s',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                    }}
-                                                >
-                                                    <Typography sx={{ fontWeight: 700, fontSize: '0.75rem', lineHeight: 1.2 }}>
-                                                        {step.name}
-                                                    </Typography>
-                                                </Box>
-                                            );
-                                        })}
+                                        {pSteps.sort((a, b) => new Date(a.startTime) - new Date(b.startTime)).map((step) => (
+                                            <StepBlock
+                                                key={step.id}
+                                                step={step}
+                                                top={timeToY(step.startTime)}
+                                                actualHeight={timeToY(step.endTime) - timeToY(step.startTime)}
+                                                hasAbove={pEndTimeIds.has(step.startTimeId)}
+                                                hasBelow={pStartTimeIds.has(step.endTimeId)}
+                                                isHovered={hoveredStepId === step.id}
+                                                onHover={setHoveredStepId}
+                                                onClick={handleViewStep}
+                                                createUrl={createUrl}
+                                                navigate={navigate}
+                                            />
+                                        ))}
+                                    </Box>
                                 </Box>
-                            </Box>
-                        ))}
+                            );
+                        })}
                     </Box>
                 </Box>
             )}
@@ -247,7 +230,66 @@ const PlanItinerariesScreen = () => {
             )}
 
             <ItineraryDialog open={itinDialogOpen} onClose={() => setItinDialogOpen(false)} working={working} setWorking={setWorking} onCreate={handleCreateItinerary} isMutating={itinMutating} />
-        </>
+        </Box>
+    );
+};
+
+const StepBlock = ({ step, top, actualHeight, hasAbove, hasBelow, isHovered, onHover, onClick, createUrl, navigate }) => {
+    const labelFits = actualHeight >= 18;
+    const needsExpansion = isHovered && !labelFits;
+    const height = needsExpansion ? 24 : actualHeight;
+    const aboveLocationId = step.route ? step.route.originLocationId : step.locationId;
+    const belowLocationId = step.route ? step.route.destinationLocationId : step.locationId;
+    const pIds = (step.participantIds || []).join(',');
+
+    return (
+        <Box
+            onClick={() => onClick(step)}
+            onMouseEnter={() => onHover(step.id)}
+            onMouseLeave={() => onHover(null)}
+            sx={{
+                position: 'absolute',
+                top,
+                left: 4,
+                right: 4,
+                height,
+                borderRadius: '6px',
+                border: '1px solid',
+                zIndex: isHovered ? 2 : 1,
+                borderColor: isHovered ? 'primary.main' : 'divider',
+                backgroundColor: needsExpansion ? 'background.paper' : isHovered ? 'action.selected' : 'action.hover',
+                boxShadow: isHovered ? '0 0 8px 2px rgba(144,202,249,0.4)' : 'none',
+                cursor: 'pointer',
+                px: 1,
+                transition: 'border-color 0.15s, background-color 0.15s, box-shadow 0.15s, height 0.15s',
+                display: 'flex',
+                alignItems: 'center',
+            }}
+        >
+            {(labelFits || needsExpansion) && (
+                <Typography sx={{ fontWeight: 700, fontSize: '0.75rem', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {step.name}
+                </Typography>
+            )}
+            {isHovered && !hasAbove && step.startTimeId && (
+                <IconButton
+                    size="small"
+                    onClick={(e) => { e.stopPropagation(); navigate(`${createUrl}?endTimeId=${step.startTimeId}${aboveLocationId ? `&locationId=${aboveLocationId}` : ''}${pIds ? `&participantIds=${pIds}` : ''}`); }}
+                    sx={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', width: 24, height: 24, backgroundColor: 'background.paper', border: '1px solid', borderColor: 'divider', zIndex: 1, '&:hover': { backgroundColor: 'action.hover' } }}
+                >
+                    <AddIcon sx={{ fontSize: 16 }} />
+                </IconButton>
+            )}
+            {isHovered && !hasBelow && step.endTimeId && (
+                <IconButton
+                    size="small"
+                    onClick={(e) => { e.stopPropagation(); navigate(`${createUrl}?startTimeId=${step.endTimeId}${belowLocationId ? `&locationId=${belowLocationId}` : ''}${pIds ? `&participantIds=${pIds}` : ''}`); }}
+                    sx={{ position: 'absolute', bottom: -12, left: '50%', transform: 'translateX(-50%)', width: 24, height: 24, backgroundColor: 'background.paper', border: '1px solid', borderColor: 'divider', zIndex: 1, '&:hover': { backgroundColor: 'action.hover' } }}
+                >
+                    <AddIcon sx={{ fontSize: 16 }} />
+                </IconButton>
+            )}
+        </Box>
     );
 };
 

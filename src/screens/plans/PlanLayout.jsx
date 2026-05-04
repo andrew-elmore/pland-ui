@@ -18,6 +18,7 @@ import PeopleIcon from '@mui/icons-material/People';
 import PlaceIcon from '@mui/icons-material/Place';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import DirectionsIcon from '@mui/icons-material/Directions';
+import GroupsIcon from '@mui/icons-material/Groups';
 import { actions as planActions, selectors as planSelectors } from '../../store/plan';
 import ROUTES from '../../router/routes';
 
@@ -28,6 +29,7 @@ const navItems = [
     { label: 'Times', icon: <AccessTimeIcon fontSize="small" />, path: 'times' },
     { label: 'Routes', icon: <DirectionsIcon fontSize="small" />, path: 'routes' },
     { label: 'Locations', icon: <PlaceIcon fontSize="small" />, path: 'locations' },
+    { label: 'Groups', icon: <GroupsIcon fontSize="small" />, path: 'groups' },
     { label: 'Participants', icon: <PeopleIcon fontSize="small" />, path: 'participants' },
 ];
 
