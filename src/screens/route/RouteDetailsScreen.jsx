@@ -13,7 +13,7 @@ import { actions as routeActions, selectors as routeSelectors } from '../../stor
 import RouteDisplay from '../../features/route/RouteDisplay';
 import ROUTES from '../../router/routes';
 
-const PlanRouteDetailsScreen = () => {
+const RouteDetailsScreen = () => {
     const { planId, routeId } = useParams();
     const navigate = useNavigate();
     const dispatch = useDispatch();
@@ -63,4 +63,4 @@ const PlanRouteDetailsScreen = () => {
     );
 };
 
-export default PlanRouteDetailsScreen;
+export default RouteDetailsScreen;

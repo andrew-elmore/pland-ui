@@ -16,12 +16,8 @@ import { actions as routeActions, selectors as routeSelectors } from '../../stor
 import { actions as participantActions, selectors as participantSelectors } from '../../store/participant';
 import { actions as locationActions, selectors as locationSelectors } from '../../store/location';
 import RouteDisplay from '../../features/route/RouteDisplay';
+import formatTime from '../../utils/formatTime';
 import ROUTES from '../../router/routes';
-
-const formatTime = (date) => {
-    if (!date) return '';
-    return new Date(date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-};
 
 const StepDetailsScreen = () => {
     const { planId, itineraryId, stepId } = useParams();

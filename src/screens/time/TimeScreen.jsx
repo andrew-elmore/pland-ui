@@ -19,7 +19,7 @@ import SubdirectoryArrowRightIcon from '@mui/icons-material/SubdirectoryArrowRig
 import { actions as timeActions, selectors as timeSelectors } from '../../store/time';
 import TimeFormDialog from '../../components/common/TimeFormDialog';
 
-const PlanTimesScreen = () => {
+const TimeScreen = () => {
     const { planId } = useParams();
     const dispatch = useDispatch();
 
@@ -166,4 +166,4 @@ const PlanTimesScreen = () => {
     );
 };
 
-export default PlanTimesScreen;
+export default TimeScreen;

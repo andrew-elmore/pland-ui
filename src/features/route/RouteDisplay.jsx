@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import {
     Box,
     Typography,
@@ -7,33 +7,12 @@ import {
     ListItemText,
     Chip,
 } from '@mui/material';
-import { APIProvider, Map, Polyline, Marker, useMap } from '@vis.gl/react-google-maps';
+import { APIProvider, Map, Polyline, Marker } from '@vis.gl/react-google-maps';
 import Route from '../../domain/Route';
+import FitBounds from './FitBounds';
+import formatTime from '../../utils/formatTime';
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-
-const formatTime = (date) => {
-    if (!date) return '';
-    return new Date(date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-};
-
-const FitBounds = ({ route }) => {
-    const map = useMap();
-
-    useEffect(() => {
-        if (!map) return;
-        const steps = [...route.steps];
-        if (!steps.length) return;
-        const bounds = new window.google.maps.LatLngBounds();
-        steps.forEach((step) => {
-            bounds.extend({ lat: step.startLat, lng: step.startLng });
-            bounds.extend({ lat: step.endLat, lng: step.endLng });
-        });
-        map.fitBounds(bounds, 40);
-    }, [map, route.id]);
-
-    return null;
-};
 
 const RouteDisplay = ({ route }) => {
     const steps = useMemo(() => [...route.steps], [route]);

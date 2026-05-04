@@ -9,28 +9,17 @@ import {
     ListItem,
     ListItemText,
     IconButton,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    TextField,
-    Autocomplete,
     CircularProgress,
     Alert,
     Chip,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { actions as participantActions, selectors as participantSelectors } from '../../store/participant';
 import Participant from '../../domain/Participant';
+import ParticipantDialog from '../../features/participant/ParticipantDialog';
 
-const ROLE_OPTIONS = Participant.ROLES.map((role) => ({
-    value: role,
-    label: Participant.ROLE_LABELS[role],
-}));
-
-const PlanParticipantsScreen = () => {
+const ParticipantScreen = () => {
     const { planId } = useParams();
     const dispatch = useDispatch();
 
@@ -77,8 +66,6 @@ const PlanParticipantsScreen = () => {
     const handleRemove = (participantId) => {
         dispatch(participantActions.remove(participantId));
     };
-
-    const selectedRoleOption = ROLE_OPTIONS.find((o) => o.value === working.role) || null;
 
     if (isLoading && !isLoaded) {
         return (
@@ -133,35 +120,16 @@ const PlanParticipantsScreen = () => {
                 </List>
             )}
 
-            <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="xs" fullWidth disableRestoreFocus>
-                <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}>
-                    Add Participant
-                    <IconButton onClick={handleCloseDialog} edge="end" size="small">
-                        <CloseIcon fontSize="small" />
-                    </IconButton>
-                </DialogTitle>
-                <DialogContent sx={{ pt: 1 }}>
-                    <TextField autoFocus label="First Name" fullWidth size="small" value={working.firstName} onChange={(e) => handleChange('firstName', e.target.value)} sx={{ mt: 1, mb: 1.5 }} />
-                    <TextField label="Last Name" fullWidth size="small" value={working.lastName} onChange={(e) => handleChange('lastName', e.target.value)} sx={{ mb: 1.5 }} />
-                    <TextField label="Email" fullWidth size="small" type="email" value={working.email} onChange={(e) => handleChange('email', e.target.value)} sx={{ mb: 1.5 }} />
-                    <Autocomplete
-                        options={ROLE_OPTIONS}
-                        getOptionLabel={(option) => option.label}
-                        value={selectedRoleOption}
-                        onChange={(_, option) => handleChange('role', option?.value ?? Participant.ROLE_ATTENDEE)}
-                        isOptionEqualToValue={(option, val) => option.value === val.value}
-                        disableClearable
-                        size="small"
-                        renderInput={(params) => <TextField {...params} label="Role" />}
-                    />
-                </DialogContent>
-                <DialogActions sx={{ px: 2, pb: 1.5 }}>
-                    <Button variant="outlined" size="small" onClick={handleCloseDialog} sx={{ borderRadius: '20px', textTransform: 'none' }}>Cancel</Button>
-                    <Button variant="contained" size="small" onClick={handleCreate} disabled={isMutating || !working.isSavable()} sx={{ borderRadius: '20px', textTransform: 'none', fontWeight: 600 }}>Add</Button>
-                </DialogActions>
-            </Dialog>
+            <ParticipantDialog
+                open={dialogOpen}
+                onClose={handleCloseDialog}
+                working={working}
+                onChange={handleChange}
+                onCreate={handleCreate}
+                isMutating={isMutating}
+            />
         </>
     );
 };
 
-export default PlanParticipantsScreen;
+export default ParticipantScreen;

@@ -5,15 +5,15 @@ import ROUTES from './routes';
 import HomeScreen from '../screens/HomeScreen';
 import PlanLayout from '../screens/plans/PlanLayout';
 import PlanItinerariesScreen from '../screens/plans/PlanItinerariesScreen';
-import PlanGroupsScreen from '../screens/plans/PlanGroupsScreen';
-import PlanParticipantsScreen from '../screens/plans/PlanParticipantsScreen';
-import PlanLocationsScreen from '../screens/plans/PlanLocationsScreen';
-import PlanTimesScreen from '../screens/plans/PlanTimesScreen';
-import PlanRoutesScreen from '../screens/plans/PlanRoutesScreen';
-import PlanRouteDetailsScreen from '../screens/plans/PlanRouteDetailsScreen';
-import StepCreateScreen from '../screens/plans/StepCreateScreen';
-import StepDetailsScreen from '../screens/plans/StepDetailsScreen';
-import StepEditScreen from '../screens/plans/StepEditScreen';
+import StepCreateScreen from '../screens/step/StepCreateScreen';
+import StepDetailsScreen from '../screens/step/StepDetailsScreen';
+import StepEditScreen from '../screens/step/StepEditScreen';
+import TimeScreen from '../screens/time/TimeScreen';
+import RouteScreen from '../screens/route/RouteScreen';
+import RouteDetailsScreen from '../screens/route/RouteDetailsScreen';
+import GroupScreen from '../screens/group/GroupScreen';
+import ParticipantScreen from '../screens/participant/ParticipantScreen';
+import LocationScreen from '../screens/location/LocationScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 
@@ -27,12 +27,12 @@ const AppRouter = () => {
                 <Route path="itineraries/:itineraryId/steps/create" element={<StepCreateScreen />} />
                 <Route path="itineraries/:itineraryId/steps/:stepId" element={<StepDetailsScreen />} />
                 <Route path="itineraries/:itineraryId/steps/:stepId/edit" element={<StepEditScreen />} />
-                <Route path="times" element={<PlanTimesScreen />} />
-                <Route path="routes" element={<PlanRoutesScreen />} />
-                <Route path="routes/:routeId" element={<PlanRouteDetailsScreen />} />
-                <Route path="groups" element={<PlanGroupsScreen />} />
-                <Route path="participants" element={<PlanParticipantsScreen />} />
-                <Route path="locations" element={<PlanLocationsScreen />} />
+                <Route path="times" element={<TimeScreen />} />
+                <Route path="routes" element={<RouteScreen />} />
+                <Route path="routes/:routeId" element={<RouteDetailsScreen />} />
+                <Route path="groups" element={<GroupScreen />} />
+                <Route path="participants" element={<ParticipantScreen />} />
+                <Route path="locations" element={<LocationScreen />} />
             </Route>
             <Route path={ROUTES.LOGIN} element={<LoginScreen />} />
             <Route path={ROUTES.REGISTER} element={<RegisterScreen />} />

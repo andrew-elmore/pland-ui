@@ -6,13 +6,6 @@ import {
     Typography,
     Button,
     IconButton,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    TextField,
-    Autocomplete,
-    Checkbox,
     CircularProgress,
     Alert,
     Accordion,
@@ -24,15 +17,15 @@ import {
     Chip,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { actions as groupActions, selectors as groupSelectors } from '../../store/group';
 import { actions as participantActions, selectors as participantSelectors } from '../../store/participant';
 import Group from '../../domain/Group';
+import GroupDialog from '../../features/group/GroupDialog';
 
-const PlanGroupsScreen = () => {
+const GroupScreen = () => {
     const { planId } = useParams();
     const dispatch = useDispatch();
 
@@ -94,8 +87,6 @@ const PlanGroupsScreen = () => {
     const handleRemove = (groupId) => {
         dispatch(groupActions.remove(groupId));
     };
-
-    const selectedParticipants = participantList.filter(p => working.participantIds.includes(p.id));
 
     if (isLoading && !isLoaded) {
         return (
@@ -162,50 +153,18 @@ const PlanGroupsScreen = () => {
                 </Box>
             )}
 
-            <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="xs" fullWidth disableRestoreFocus>
-                <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}>
-                    {editingGroup ? 'Edit Group' : 'Add Group'}
-                    <IconButton onClick={handleCloseDialog} edge="end" size="small">
-                        <CloseIcon fontSize="small" />
-                    </IconButton>
-                </DialogTitle>
-                <DialogContent sx={{ pt: 1 }}>
-                    <TextField
-                        autoFocus
-                        label="Group Name"
-                        fullWidth
-                        size="small"
-                        value={working.name}
-                        onChange={(e) => handleChange('name', e.target.value)}
-                        sx={{ mt: 1, mb: 1.5 }}
-                    />
-                    <Autocomplete
-                        multiple
-                        options={participantList}
-                        getOptionLabel={(option) => option.fullName || `${option.firstName} ${option.lastName}`.trim()}
-                        value={selectedParticipants}
-                        onChange={(_, value) => handleChange('participantIds', value.map(p => p.id))}
-                        isOptionEqualToValue={(a, b) => a.id === b.id}
-                        disableCloseOnSelect
-                        renderOption={(props, option, { selected }) => (
-                            <li {...props} key={option.id}>
-                                <Checkbox size="small" checked={selected} sx={{ mr: 0.5, p: 0.25 }} />
-                                {option.fullName || `${option.firstName} ${option.lastName}`.trim()}
-                            </li>
-                        )}
-                        renderInput={(params) => <TextField {...params} label="Members" size="small" />}
-                        size="small"
-                    />
-                </DialogContent>
-                <DialogActions sx={{ px: 2, pb: 1.5 }}>
-                    <Button variant="outlined" size="small" onClick={handleCloseDialog} sx={{ borderRadius: '20px', textTransform: 'none' }}>Cancel</Button>
-                    <Button variant="contained" size="small" onClick={handleSave} disabled={isMutating || !working.isSavable()} sx={{ borderRadius: '20px', textTransform: 'none', fontWeight: 600 }}>
-                        {editingGroup ? 'Save' : 'Add'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
+            <GroupDialog
+                open={dialogOpen}
+                onClose={handleCloseDialog}
+                working={working}
+                onChange={handleChange}
+                onSave={handleSave}
+                editingGroup={editingGroup}
+                isMutating={isMutating}
+                participants={participants}
+            />
         </>
     );
 };
 
-export default PlanGroupsScreen;
+export default GroupScreen;
