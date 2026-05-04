@@ -37,7 +37,6 @@ const RouteForm = ({
                 locationList={locationList}
                 label="Origin"
                 planId={planId}
-                showMap={false}
             />
         )}
 
@@ -47,7 +46,6 @@ const RouteForm = ({
             locationList={locationList}
             label="Destination"
             planId={planId}
-            showMap={false}
         />
 
         <Box sx={{ mt: 2 }}>

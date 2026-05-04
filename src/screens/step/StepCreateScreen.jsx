@@ -160,13 +160,25 @@ const StepCreateScreen = () => {
     };
 
     const handleToggleRoute = () => {
-        setIsRouteStep(!isRouteStep);
-        setDestinationLocationId(null);
+        const enteringRouteMode = !isRouteStep;
+        setIsRouteStep(enteringRouteMode);
         setTransitModes([]);
-        setRouteTimeId(null);
-        setTimeMode(Route.TIME_MODE_DEPART_AT);
         setPaddingHours('');
         setPaddingMinutes('');
+        if (enteringRouteMode && hasStartParam) {
+            setDestinationLocationId(null);
+            setTimeMode(Route.TIME_MODE_DEPART_AT);
+            setRouteTimeId(stepStartTimeId);
+        } else if (enteringRouteMode && hasEndParam) {
+            setDestinationLocationId(stepLocationId);
+            setStepLocationId(null);
+            setTimeMode(Route.TIME_MODE_ARRIVE_BY);
+            setRouteTimeId(stepEndTimeId);
+        } else {
+            setDestinationLocationId(null);
+            setTimeMode(Route.TIME_MODE_DEPART_AT);
+            setRouteTimeId(null);
+        }
     };
 
     const handlePreview = async () => {
