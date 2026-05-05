@@ -24,7 +24,7 @@ const RouteForm = ({
     paddingHours, onPaddingHoursChange,
     paddingMinutes, onPaddingMinutesChange,
     routeOptions, selectedRouteIdx, onRouteSelect,
-    previewLoading, onPreview, showPreview,
+    previewLoading, onPreview,
     onRemoveDestination,
     locationList, timeList, onEditTime,
     planId, departureTime,
@@ -118,7 +118,7 @@ const RouteForm = ({
             <TextField label="Min" type="number" size="small" value={paddingMinutes} onChange={(e) => onPaddingMinutesChange(e.target.value)} slotProps={{ htmlInput: { min: 0, max: 59 } }} sx={{ width: 80 }} />
         </Box>
 
-        {showPreview && originLocationId && destinationLocationId && routeTimeId && (
+        {originLocationId && destinationLocationId && routeTimeId && (
             <Button
                 variant="outlined"
                 size="small"

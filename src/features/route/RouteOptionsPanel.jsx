@@ -10,7 +10,6 @@ import {
 import { APIProvider, Map, Polyline, Marker } from '@vis.gl/react-google-maps';
 import FitBounds from './FitBounds';
 import Route from '../../domain/Route';
-import DirectionStepArray from '../../domain/DirectionStepArray';
 import formatTime from '../../utils/formatTime';
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
@@ -20,7 +19,6 @@ const RouteOptionsPanel = ({ options, selectedIdx, onSelect, departureTime }) =>
 
     const steps = useMemo(() => {
         if (!selected) return [];
-        if (selected.steps instanceof DirectionStepArray) return [...selected.steps];
         return selected.steps || [];
     }, [selected]);
 
@@ -39,7 +37,6 @@ const RouteOptionsPanel = ({ options, selectedIdx, onSelect, departureTime }) =>
 
     const routeForBounds = useMemo(() => {
         if (!selected) return null;
-        if (selected.id && selected.steps instanceof DirectionStepArray) return selected;
         return new Route({ ...selected, id: 'preview' });
     }, [selected]);
 

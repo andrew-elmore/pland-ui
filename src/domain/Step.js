@@ -27,18 +27,4 @@ export default class Step extends BasicDomain {
         return this.routeId != null;
     }
 
-    get durationMinutes() {
-        if (!this.startTime || !this.endTime) return 0;
-        return (new Date(this.endTime) - new Date(this.startTime)) / 60000;
-    }
-
-    isSavable = () => (
-        this.name != null
-        && this.name.trim() !== ''
-        && (this.startTimeId != null || this.startTime != null)
-        && (this.endTimeId != null || this.endTime != null)
-        && this.participantIds.length > 0
-    );
-
-    toString = () => this.name || `Step ${this.id}`;
 }

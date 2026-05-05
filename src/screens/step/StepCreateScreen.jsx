@@ -287,7 +287,6 @@ const StepCreateScreen = () => {
                         onRouteSelect={setSelectedRouteIdx}
                         previewLoading={previewLoading}
                         onPreview={handlePreview}
-                        showPreview={true}
                         onRemoveDestination={handleToggleRoute}
                         locationList={locationList}
                         timeList={timeList}

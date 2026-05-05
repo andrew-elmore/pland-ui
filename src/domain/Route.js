@@ -88,14 +88,6 @@ export default class Route extends BasicDomain {
         return `${Math.round(this.distanceMeters * 3.28084)} ft`;
     }
 
-    get travelModeLabel() {
-        return Route.TRAVEL_MODE_LABELS[this.travelMode] || 'Unknown';
-    }
-
-    get timeModeLabel() {
-        return Route.TIME_MODE_LABELS[this.timeMode] || 'Unknown';
-    }
-
     get originName() {
         return this.originLocation?.name || '';
     }
@@ -104,11 +96,4 @@ export default class Route extends BasicDomain {
         return this.destinationLocation?.name || '';
     }
 
-    isSavable = () => (
-        this.originLocationId != null
-        && this.destinationLocationId != null
-        && Route.TRAVEL_MODES.includes(this.travelMode)
-    );
-
-    toString = () => `${this.travelModeLabel} (${this.durationMinutes} min)`;
 }
