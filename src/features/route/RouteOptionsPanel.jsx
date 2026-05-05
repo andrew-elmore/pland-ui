@@ -51,10 +51,6 @@ const RouteOptionsPanel = ({ options, selectedIdx, onSelect, departureTime }) =>
         return `${Math.round(option.distanceMeters * 3.28084)} ft`;
     };
 
-    const center = first
-        ? { lat: (first.startLat + last.endLat) / 2, lng: (first.startLng + last.endLng) / 2 }
-        : { lat: 0, lng: 0 };
-
     return (
         <Box sx={{ display: 'flex', border: '1px solid', borderColor: 'divider', borderRadius: '8px', overflow: 'hidden', height: 450 }}>
             <Box sx={{ width: '25%', flexShrink: 0, borderRight: '1px solid', borderColor: 'divider', overflow: 'auto' }}>
@@ -80,7 +76,7 @@ const RouteOptionsPanel = ({ options, selectedIdx, onSelect, departureTime }) =>
                 <APIProvider apiKey={GOOGLE_MAPS_API_KEY}>
                     <Box sx={{ width: '30%', flexShrink: 0, borderRight: '1px solid', borderColor: 'divider' }}>
                         <Map
-                            defaultCenter={center}
+                            defaultCenter={{ lat: (first.startLat + last.endLat) / 2, lng: (first.startLng + last.endLng) / 2 }}
                             defaultZoom={10}
                             gestureHandling="cooperative"
                             disableDefaultUI

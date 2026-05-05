@@ -13,9 +13,11 @@ const InlineLocationDisplay = ({ location, size = 120 }) => {
                 </Box>
             )}
             <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: 0 }}>
-                <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                    {location.name}
-                </Typography>
+                {location.name && (
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        {location.name}
+                    </Typography>
+                )}
                 {location.address && (
                     <Typography variant="caption" color="text.secondary">
                         {location.address}

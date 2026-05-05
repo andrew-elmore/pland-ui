@@ -48,7 +48,7 @@ const Form = ({ formType, formData, children, title, activator, actions, alwaysI
         return (
             <>
                 {activatorEl}
-                <AppDialog id={formId} title={title} maxWidth={maxWidth} actions={resolvedActions}>
+                <AppDialog id={formId} title={title} maxWidth={maxWidth} actions={resolvedActions} onClose={onClose}>
                     {content}
                 </AppDialog>
             </>

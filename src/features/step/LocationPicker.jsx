@@ -5,7 +5,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { actions as locationActions } from '../../store/location';
 import LocationMap from '../../components/common/LocationMap';
 
-const LocationPicker = ({ value, onChange, locationList, label, planId }) => {
+const LocationPicker = ({ value, onChange, locationList, label, planId, showMap = true }) => {
     const dispatch = useDispatch();
     const [creating, setCreating] = useState(false);
     const [newName, setNewName] = useState('');
@@ -167,7 +167,7 @@ const LocationPicker = ({ value, onChange, locationList, label, planId }) => {
                     <AddIcon fontSize="small" />
                 </IconButton>
             </Box>
-            {selectedLocation && (
+            {showMap && selectedLocation && (
                 <LocationMap latitude={selectedLocation.latitude} longitude={selectedLocation.longitude} height={150} />
             )}
         </>

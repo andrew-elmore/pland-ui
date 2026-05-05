@@ -43,16 +43,16 @@ const StepDetailsScreen = () => {
     }, [dispatch, planId]);
 
     useEffect(() => {
-        if (stepId && step.id !== stepId) {
+        if (stepId && (!step || step.id !== stepId)) {
             dispatch(stepActions.get(stepId));
         }
-    }, [dispatch, stepId, step.id]);
+    }, [dispatch, stepId, step?.id]);
 
     useEffect(() => {
-        if (step.routeId && route.id !== step.routeId) {
+        if (step?.routeId && route?.id !== step.routeId) {
             dispatch(routeActions.get(step.routeId));
         }
-    }, [dispatch, step.routeId, route.id]);
+    }, [dispatch, step?.routeId, route?.id]);
 
     if (isLoading && !isLoaded) {
         return (
@@ -66,7 +66,7 @@ const StepDetailsScreen = () => {
         return <Alert severity="error">{error}</Alert>;
     }
 
-    if (isLoaded && !step.id) {
+    if (isLoaded && !step?.id) {
         return <Alert severity="warning">Step not found</Alert>;
     }
 

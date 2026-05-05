@@ -9,6 +9,7 @@ import {
     Button,
     ToggleButtonGroup,
     ToggleButton,
+    Alert,
 } from '@mui/material';
 import DirectionsIcon from '@mui/icons-material/Directions';
 import { actions as stepActions, selectors as stepSelectors } from '../../store/step';
@@ -40,6 +41,7 @@ const StepCreateScreen = () => {
     const groups = useSelector(groupSelectors.list);
     const locations = useSelector(locationSelectors.list);
     const times = useSelector(timeSelectors.list);
+    const timeMutating = useSelector(timeSelectors.isMutating);
 
     const [stepName, setStepName] = useState('');
     const [stepStartTimeId, setStepStartTimeId] = useState(searchParams.get('startTimeId'));
@@ -55,7 +57,7 @@ const StepCreateScreen = () => {
     const [travelMode, setTravelMode] = useState(Route.TRAVEL_MODE_DRIVE);
     const [transitModes, setTransitModes] = useState([]);
     const [routeTimeId, setRouteTimeId] = useState(null);
-    const [timeMode, setTimeMode] = useState('depart_at');
+    const [timeMode, setTimeMode] = useState(Route.TIME_MODE_DEPART_AT);
     const [paddingHours, setPaddingHours] = useState('');
     const [paddingMinutes, setPaddingMinutes] = useState('');
     const [routeOptions, setRouteOptions] = useState([]);
@@ -162,7 +164,7 @@ const StepCreateScreen = () => {
         setDestinationLocationId(null);
         setTransitModes([]);
         setRouteTimeId(null);
-        setTimeMode('depart_at');
+        setTimeMode(Route.TIME_MODE_DEPART_AT);
         setPaddingHours('');
         setPaddingMinutes('');
     };
@@ -221,6 +223,8 @@ const StepCreateScreen = () => {
                 <Box mb={3}>
                     <Typography variant="h5" gutterBottom>Add Step</Typography>
                 </Box>
+
+                {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
                 <TextField
                     autoFocus
@@ -289,6 +293,7 @@ const StepCreateScreen = () => {
                         timeList={timeList}
                         onEditTime={handleEditTime}
                         planId={planId}
+                        departureTime={timeMode === Route.TIME_MODE_DEPART_AT ? timeList.find(t => t.id === routeTimeId)?.datetime : undefined}
                     />
                 )}
 
@@ -403,6 +408,7 @@ const StepCreateScreen = () => {
                         times={times}
                         editingTime={editingTime}
                         onSubmit={handleSubmitTime}
+                        isSaving={timeMutating}
                     />
                 )}
             </Form>

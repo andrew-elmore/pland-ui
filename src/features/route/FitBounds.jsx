@@ -5,7 +5,7 @@ const FitBounds = ({ route }) => {
     const map = useMap();
 
     useEffect(() => {
-        if (!map) return;
+        if (!map || !route) return;
         const steps = [...route.steps];
         if (!steps.length) return;
         const bounds = new window.google.maps.LatLngBounds();
@@ -14,7 +14,7 @@ const FitBounds = ({ route }) => {
             bounds.extend({ lat: step.endLat, lng: step.endLng });
         });
         map.fitBounds(bounds, 40);
-    }, [map, route.id]);
+    }, [map, route]);
 
     return null;
 };

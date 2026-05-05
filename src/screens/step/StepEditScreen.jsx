@@ -40,6 +40,7 @@ const StepEditScreen = () => {
     const groups = useSelector(groupSelectors.list);
     const locations = useSelector(locationSelectors.list);
     const times = useSelector(timeSelectors.list);
+    const timeMutating = useSelector(timeSelectors.isMutating);
 
     const [stepName, setStepName] = useState('');
     const [stepStartTimeId, setStepStartTimeId] = useState(null);
@@ -60,8 +61,6 @@ const StepEditScreen = () => {
     const [routeOptions, setRouteOptions] = useState([]);
     const [selectedRouteIdx, setSelectedRouteIdx] = useState(null);
     const [previewLoading, setPreviewLoading] = useState(false);
-
-
     const [editingTime, setEditingTime] = useState(null);
 
     useEffect(() => {
@@ -93,14 +92,15 @@ const StepEditScreen = () => {
                 setTravelMode(step.route.travelMode);
                 setTransitModes(step.route.transitModes || []);
                 setTimeMode(step.route.timeMode);
-                setRouteTimeId(step.route.timeMode === 'depart_at' ? step.startTimeId : step.endTimeId);
-                const computedTimeId = step.route.timeMode === 'depart_at' ? step.endTimeId : step.startTimeId;
+                setRouteTimeId(step.route.timeMode === Route.TIME_MODE_DEPART_AT ? step.startTimeId : step.endTimeId);
+                const computedTimeId = step.route.timeMode === Route.TIME_MODE_DEPART_AT ? step.endTimeId : step.startTimeId;
                 const computedTime = [...times].find(t => t.id === computedTimeId);
-                if (!computedTime) return;
-                if (computedTime.offsetSeconds) {
+                if (computedTime?.offsetSeconds) {
                     const abs = Math.abs(computedTime.offsetSeconds);
-                    setPaddingHours(String(Math.floor(abs / 3600) || ''));
-                    setPaddingMinutes(String(Math.round((abs % 3600) / 60) || ''));
+                    const h = Math.floor(abs / 3600);
+                    const m = Math.round((abs % 3600) / 60);
+                    setPaddingHours(h > 0 ? String(h) : '');
+                    setPaddingMinutes(m > 0 ? String(m) : '');
                 }
             }
             setInitialized(true);
@@ -295,6 +295,7 @@ const StepEditScreen = () => {
                         timeList={timeList}
                         onEditTime={handleEditTime}
                         planId={planId}
+                        departureTime={timeMode === Route.TIME_MODE_DEPART_AT ? timeList.find(t => t.id === routeTimeId)?.datetime : undefined}
                     />
                 ) : (
                     <>
@@ -372,6 +373,7 @@ const StepEditScreen = () => {
                         times={times}
                         editingTime={editingTime}
                         onSubmit={handleSubmitTime}
+                        isSaving={timeMutating}
                     />
                 )}
             </Form>

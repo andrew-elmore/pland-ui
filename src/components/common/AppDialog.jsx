@@ -4,12 +4,15 @@ import { Dialog, DialogTitle, DialogContent, DialogActions, IconButton } from '@
 import CloseIcon from '@mui/icons-material/Close';
 import { actions as uiActions, selectors as uiSelectors } from '../../store/ui';
 
-const AppDialog = ({ id, title, maxWidth = 'sm', children, actions }) => {
+const AppDialog = ({ id, title, maxWidth = 'sm', children, actions, onClose }) => {
     const dispatch = useDispatch();
     const openDialog = useSelector(uiSelectors.openDialog);
     const isOpen = openDialog === id;
 
-    const handleClose = () => dispatch(uiActions.closeDialog());
+    const handleClose = () => {
+        dispatch(uiActions.closeDialog());
+        if (onClose) onClose();
+    };
 
     return (
         <Dialog open={isOpen} onClose={handleClose} maxWidth={maxWidth} fullWidth disableRestoreFocus>

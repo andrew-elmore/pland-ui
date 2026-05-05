@@ -132,6 +132,25 @@ const PlanItinerariesScreen = () => {
         );
     }
 
+    const participantList = [...participants];
+
+    const itineraryForm = (
+        <Form
+            formType="itinerary"
+            title="New Itinerary"
+            maxWidth="xs"
+            actions={({ onClose }) => (
+                <>
+                    <Button variant="outlined" size="small" onClick={onClose} sx={{ borderRadius: '20px', textTransform: 'none' }}>Cancel</Button>
+                    <Button variant="contained" size="small" onClick={() => { handleCreateItinerary(); onClose(); }} disabled={itinMutating || !working.isSavable()} sx={{ borderRadius: '20px', textTransform: 'none', fontWeight: 600 }}>Create</Button>
+                </>
+            )}
+            onClose={() => setWorking(new Itinerary())}
+        >
+            <ItineraryForm working={working} setWorking={setWorking} />
+        </Form>
+    );
+
     if (itinLoaded && itineraries.length === 0) {
         return (
             <>
@@ -141,25 +160,10 @@ const PlanItinerariesScreen = () => {
                         Create itinerary
                     </Button>
                 </Box>
-                <Form
-                    formType="itinerary"
-                    title="New Itinerary"
-                    maxWidth="xs"
-                    actions={({ onClose }) => (
-                        <>
-                            <Button variant="outlined" size="small" onClick={onClose} sx={{ borderRadius: '20px', textTransform: 'none' }}>Cancel</Button>
-                            <Button variant="contained" size="small" onClick={() => { handleCreateItinerary(); onClose(); }} disabled={itinMutating || !working.isSavable()} sx={{ borderRadius: '20px', textTransform: 'none', fontWeight: 600 }}>Create</Button>
-                        </>
-                    )}
-                    onClose={() => setWorking(new Itinerary())}
-                >
-                    <ItineraryForm working={working} setWorking={setWorking} />
-                </Form>
+                {itineraryForm}
             </>
         );
     }
-
-    const participantList = [...participants];
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', m: -2, height: 'calc(100vh - 64px)' }}>
@@ -236,20 +240,7 @@ const PlanItinerariesScreen = () => {
                 </Box>
             )}
 
-            <Form
-                formType="itinerary"
-                title="New Itinerary"
-                maxWidth="xs"
-                actions={({ onClose }) => (
-                    <>
-                        <Button variant="outlined" size="small" onClick={onClose} sx={{ borderRadius: '20px', textTransform: 'none' }}>Cancel</Button>
-                        <Button variant="contained" size="small" onClick={() => { handleCreateItinerary(); onClose(); }} disabled={itinMutating || !working.isSavable()} sx={{ borderRadius: '20px', textTransform: 'none', fontWeight: 600 }}>Create</Button>
-                    </>
-                )}
-                onClose={() => setWorking(new Itinerary())}
-            >
-                <ItineraryForm working={working} setWorking={setWorking} />
-            </Form>
+            {itineraryForm}
         </Box>
     );
 };
