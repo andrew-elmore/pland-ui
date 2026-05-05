@@ -13,6 +13,7 @@ export default class DirectionStep extends BasicDomain {
         endLng: 0,
         polyline: '',
         travelMode: '',
+        transitDetails: null,
     };
 
     static FIELDS = Object.keys(DirectionStep.DEFAULTS);

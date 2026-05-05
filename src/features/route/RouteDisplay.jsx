@@ -4,13 +4,13 @@ import {
     Typography,
     Chip,
     List,
-    ListItem,
-    ListItemText,
 } from '@mui/material';
 import { APIProvider, Map, Polyline, Marker } from '@vis.gl/react-google-maps';
 import Route from '../../domain/Route';
 import FitBounds from './FitBounds';
 import formatTime from '../../utils/formatTime';
+import DirectionStepItem from './DirectionStepItem';
+import { getStepColor } from './routeColors';
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
@@ -46,14 +46,26 @@ const RouteDisplay = ({ route }) => {
                         style={{ width: '100%', height: '100%' }}
                     >
                         <FitBounds route={route} />
-                        {route.overviewPolyline && (
+                        {steps.map((step, i) => step.polyline && (
                             <Polyline
-                                encodedPath={route.overviewPolyline}
-                                strokeColor="#1976d2"
-                                strokeOpacity={0.8}
-                                strokeWeight={4}
+                                key={i}
+                                encodedPath={step.polyline}
+                                strokeColor={getStepColor(step)}
+                                strokeOpacity={step.travelMode === 'WALKING' ? 0 : 0.9}
+                                strokeWeight={step.travelMode === 'WALKING' ? 0 : 7}
+                                geodesic
                             />
-                        )}
+                        ))}
+                        {steps.map((step, i) => step.polyline && step.travelMode === 'WALKING' && (
+                            <Polyline
+                                key={`walk-${i}`}
+                                encodedPath={step.polyline}
+                                strokeColor={getStepColor(step)}
+                                strokeOpacity={0.7}
+                                strokeWeight={4}
+                                icons={[{ icon: { path: 'M 0,-0.5 0,0.5', strokeOpacity: 1, scale: 3 }, offset: '0', repeat: '10px' }]}
+                            />
+                        ))}
                         <Marker position={{ lat: first.startLat, lng: first.startLng }} />
                         <Marker position={{ lat: last.endLat, lng: last.endLng }} />
                     </Map>
@@ -74,46 +86,18 @@ const RouteDisplay = ({ route }) => {
                     {route.departureTime && route.arrivalTime && (
                         <Box sx={{ mb: 1, display: 'flex', gap: 2 }}>
                             <Typography variant="body2" color="text.secondary">
-                                        Depart {formatTime(route.departureTime)}
+                                Depart {formatTime(route.departureTime)}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                                        Arrive {formatTime(route.arrivalTime)}
+                                Arrive {formatTime(route.arrivalTime)}
                             </Typography>
                         </Box>
                     )}
                     <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.5 }}>Directions</Typography>
                     <List disablePadding dense>
-                        {steps.map((step, i) => {
-                            const times = stepTimes[i];
-                            return (
-                                <ListItem key={i} sx={{ py: 0.25, px: 0, alignItems: 'flex-start' }}>
-                                    <Box sx={{ minWidth: 24, pt: 0.25 }}>
-                                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>{i + 1}</Typography>
-                                    </Box>
-                                    <ListItemText
-                                        primary={
-                                            <Typography
-                                                variant="body2"
-                                                sx={{ '& b': { fontWeight: 600 } }}
-                                                dangerouslySetInnerHTML={{ __html: step.htmlInstructions }}
-                                            />
-                                        }
-                                        secondary={
-                                            <Box sx={{ display: 'flex', gap: 1.5, mt: 0.25 }}>
-                                                {times && (
-                                                    <Typography variant="caption" color="text.secondary">
-                                                        {formatTime(times.startTime)} – {formatTime(times.endTime)}
-                                                    </Typography>
-                                                )}
-                                                <Typography variant="caption" color="text.secondary">
-                                                    {step.distanceDisplay}{step.distanceDisplay && step.durationMinutes > 0 ? ' · ' : ''}{step.durationMinutes > 0 ? `${step.durationMinutes} min` : ''}
-                                                </Typography>
-                                            </Box>
-                                        }
-                                    />
-                                </ListItem>
-                            );
-                        })}
+                        {steps.map((step, i) => (
+                            <DirectionStepItem key={i} step={step} index={i} times={stepTimes[i]} fare={route.fare} />
+                        ))}
                     </List>
                 </Box>
             </Box>

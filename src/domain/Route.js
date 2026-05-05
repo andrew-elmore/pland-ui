@@ -68,6 +68,7 @@ export default class Route extends BasicDomain {
         steps: [],
         departureTime: null,
         arrivalTime: null,
+        fare: null,
     };
 
     static FIELDS = Object.keys(Route.DEFAULTS);
