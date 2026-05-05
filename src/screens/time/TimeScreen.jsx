@@ -17,7 +17,9 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import SubdirectoryArrowRightIcon from '@mui/icons-material/SubdirectoryArrowRight';
 import { actions as timeActions, selectors as timeSelectors } from '../../store/time';
-import TimeFormDialog from '../../components/common/TimeFormDialog';
+import { actions as uiActions } from '../../store/ui';
+import TimeForm from '../../components/common/TimeFormDialog';
+import Form from '../../components/common/Form';
 
 const TimeScreen = () => {
     const { planId } = useParams();
@@ -28,7 +30,6 @@ const TimeScreen = () => {
     const isMutating = useSelector(timeSelectors.isMutating);
     const error = useSelector(timeSelectors.error);
 
-    const [dialogOpen, setDialogOpen] = useState(false);
     const [editingTime, setEditingTime] = useState(null);
     const [defaultParentTimeId, setDefaultParentTimeId] = useState(null);
 
@@ -41,19 +42,13 @@ const TimeScreen = () => {
     const handleOpenCreate = (parent) => {
         setEditingTime(null);
         setDefaultParentTimeId(parent?.id ?? null);
-        setDialogOpen(true);
+        dispatch(uiActions.openDialog('time-new'));
     };
 
     const handleOpenEdit = (time) => {
         setEditingTime(time);
         setDefaultParentTimeId(null);
-        setDialogOpen(true);
-    };
-
-    const handleClose = () => {
-        setDialogOpen(false);
-        setEditingTime(null);
-        setDefaultParentTimeId(null);
+        dispatch(uiActions.openDialog(`time-${time.id}`));
     };
 
     const handleSubmitTime = (data) => {
@@ -62,7 +57,6 @@ const TimeScreen = () => {
         } else {
             dispatch(timeActions.create(data));
         }
-        handleClose();
     };
 
     const handleRemove = (id) => {
@@ -152,16 +146,25 @@ const TimeScreen = () => {
                 </List>
             )}
 
-            <TimeFormDialog
-                open={dialogOpen}
-                onClose={handleClose}
-                planId={planId}
-                times={times}
-                editingTime={editingTime}
-                defaultParentTimeId={defaultParentTimeId}
-                onSubmit={handleSubmitTime}
-                isSaving={isMutating}
-            />
+            <Form
+                formType="time"
+                formData={editingTime}
+                title={editingTime ? 'Edit Time' : 'New Time'}
+                maxWidth="xs"
+                onClose={() => { setEditingTime(null); setDefaultParentTimeId(null); }}
+            >
+                {({ onClose }) => (
+                    <TimeForm
+                        onClose={onClose}
+                        planId={planId}
+                        times={times}
+                        editingTime={editingTime}
+                        defaultParentTimeId={defaultParentTimeId}
+                        onSubmit={handleSubmitTime}
+                        isSaving={isMutating}
+                    />
+                )}
+            </Form>
         </>
     );
 };

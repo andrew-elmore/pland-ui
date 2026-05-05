@@ -6,7 +6,6 @@ import {
     Box,
     Button,
     Container,
-    Paper,
     TextField,
     Typography,
     Alert,
@@ -58,60 +57,58 @@ const LoginScreen = () => {
     return (
         <Container maxWidth="sm">
             <Box sx={{ py: 8 }}>
-                <Paper elevation={3} sx={{ p: 4 }}>
-                    <Typography variant="h4" sx={{ mb: 3 }}>
+                <Typography variant="h4" sx={{ mb: 3 }}>
                         Login
-                    </Typography>
-                    {storeError && (
-                        <Alert severity="error" sx={{ mb: 2 }}>
-                            {storeError}
-                        </Alert>
-                    )}
-                    <Box component="form" onSubmit={handleSubmit}>
-                        <TextField
-                            fullWidth
-                            label="Email"
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            error={!!errors.email}
-                            helperText={errors.email}
-                            sx={{ mb: 2 }}
-                        />
-                        <TextField
-                            fullWidth
-                            label="Password"
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            error={!!errors.password}
-                            helperText={errors.password}
-                            sx={{ mb: 3 }}
-                        />
-                        <Button
-                            fullWidth
-                            variant="contained"
-                            size="large"
-                            type="submit"
-                            disabled={isLoading}
-                        >
-                            {isLoading ? 'Logging in...' : 'Login'}
-                        </Button>
-                        <Box sx={{ mt: 2, textAlign: 'center' }}>
-                            <Typography variant="body2">
+                </Typography>
+                {storeError && (
+                    <Alert severity="error" sx={{ mb: 2 }}>
+                        {storeError}
+                    </Alert>
+                )}
+                <Box component="form" onSubmit={handleSubmit}>
+                    <TextField
+                        fullWidth
+                        label="Email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        error={!!errors.email}
+                        helperText={errors.email}
+                        sx={{ mb: 2 }}
+                    />
+                    <TextField
+                        fullWidth
+                        label="Password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        error={!!errors.password}
+                        helperText={errors.password}
+                        sx={{ mb: 3 }}
+                    />
+                    <Button
+                        fullWidth
+                        variant="contained"
+                        size="large"
+                        type="submit"
+                        disabled={isLoading}
+                    >
+                        {isLoading ? 'Logging in...' : 'Login'}
+                    </Button>
+                    <Box sx={{ mt: 2, textAlign: 'center' }}>
+                        <Typography variant="body2">
                                 Don't have an account?{' '}
-                                <Typography
-                                    component={Link}
-                                    to={ROUTES.REGISTER}
-                                    variant="body2"
-                                    sx={{ color: 'primary.main' }}
-                                >
+                            <Typography
+                                component={Link}
+                                to={ROUTES.REGISTER}
+                                variant="body2"
+                                sx={{ color: 'primary.main' }}
+                            >
                                     Register
-                                </Typography>
                             </Typography>
-                        </Box>
+                        </Typography>
                     </Box>
-                </Paper>
+                </Box>
             </Box>
         </Container>
     );

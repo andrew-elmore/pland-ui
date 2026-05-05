@@ -22,8 +22,10 @@ import EditIcon from '@mui/icons-material/Edit';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { actions as groupActions, selectors as groupSelectors } from '../../store/group';
 import { actions as participantActions, selectors as participantSelectors } from '../../store/participant';
+import { actions as uiActions } from '../../store/ui';
 import Group from '../../domain/Group';
-import GroupDialog from '../../features/group/GroupDialog';
+import GroupForm from '../../features/group/GroupDialog';
+import Form from '../../components/common/Form';
 
 const GroupScreen = () => {
     const { planId } = useParams();
@@ -35,7 +37,6 @@ const GroupScreen = () => {
     const error = useSelector(groupSelectors.error);
     const participants = useSelector(participantSelectors.list);
 
-    const [dialogOpen, setDialogOpen] = useState(false);
     const [editingGroup, setEditingGroup] = useState(null);
     const [working, setWorking] = useState(() => new Group());
 
@@ -51,19 +52,13 @@ const GroupScreen = () => {
     const handleOpenCreate = () => {
         setEditingGroup(null);
         setWorking(new Group());
-        setDialogOpen(true);
+        dispatch(uiActions.openDialog('group-new'));
     };
 
     const handleOpenEdit = (group) => {
         setEditingGroup(group);
         setWorking(new Group(group));
-        setDialogOpen(true);
-    };
-
-    const handleCloseDialog = () => {
-        setDialogOpen(false);
-        setEditingGroup(null);
-        setWorking(new Group());
+        dispatch(uiActions.openDialog(`group-${group.id}`));
     };
 
     const handleChange = (field, value) => {
@@ -81,7 +76,6 @@ const GroupScreen = () => {
         } else {
             dispatch(groupActions.create(data));
         }
-        handleCloseDialog();
     };
 
     const handleRemove = (groupId) => {
@@ -153,16 +147,23 @@ const GroupScreen = () => {
                 </Box>
             )}
 
-            <GroupDialog
-                open={dialogOpen}
-                onClose={handleCloseDialog}
-                working={working}
-                onChange={handleChange}
-                onSave={handleSave}
-                editingGroup={editingGroup}
-                isMutating={isMutating}
-                participants={participants}
-            />
+            <Form
+                formType="group"
+                formData={editingGroup}
+                title={editingGroup ? 'Edit Group' : 'Add Group'}
+                maxWidth="xs"
+                actions={({ onClose }) => (
+                    <>
+                        <Button variant="outlined" size="small" onClick={onClose} sx={{ borderRadius: '20px', textTransform: 'none' }}>Cancel</Button>
+                        <Button variant="contained" size="small" onClick={() => { handleSave(); onClose(); }} disabled={isMutating || !working.isSavable()} sx={{ borderRadius: '20px', textTransform: 'none', fontWeight: 600 }}>
+                            {editingGroup ? 'Save' : 'Add'}
+                        </Button>
+                    </>
+                )}
+                onClose={() => { setEditingGroup(null); setWorking(new Group()); }}
+            >
+                <GroupForm working={working} onChange={handleChange} participants={participants} />
+            </Form>
         </>
     );
 };

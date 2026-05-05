@@ -18,6 +18,7 @@ import { actions as locationActions, selectors as locationSelectors } from '../.
 import RouteDisplay from '../../features/route/RouteDisplay';
 import formatTime from '../../utils/formatTime';
 import ROUTES from '../../router/routes';
+import InlineLocationDisplay from '../../components/common/InlineLocationDisplay';
 
 const StepDetailsScreen = () => {
     const { planId, itineraryId, stepId } = useParams();
@@ -116,9 +117,7 @@ const StepDetailsScreen = () => {
             )}
 
             {!step.isRouteStep && location && (
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                    {location.name}
-                </Typography>
+                <InlineLocationDisplay location={location} />
             )}
 
             {step.isRouteStep && (

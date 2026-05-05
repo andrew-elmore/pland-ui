@@ -3,7 +3,6 @@ import {
     Box,
     Typography,
     Button,
-    Autocomplete,
     TextField,
     ToggleButtonGroup,
     ToggleButton,
@@ -12,6 +11,8 @@ import {
 } from '@mui/material';
 import Route from '../../domain/Route';
 import TimeSelector from './TimeSelector';
+import LocationPicker from './LocationPicker';
+import RouteOptionsPanel from '../route/RouteOptionsPanel';
 
 const RouteForm = ({
     originLocationId, onOriginChange, showOrigin,
@@ -26,30 +27,25 @@ const RouteForm = ({
     previewLoading, onPreview, showPreview,
     onRemoveDestination,
     locationList, timeList, onEditTime,
+    planId,
 }) => (
     <>
         {showOrigin && (
-            <Autocomplete
-                options={locationList}
-                getOptionLabel={(option) => option.name || ''}
-                value={locationList.find(l => l.id === originLocationId) ?? null}
-                onChange={(_, value) => onOriginChange(value?.id ?? null)}
-                isOptionEqualToValue={(a, b) => a.id === b.id}
-                renderInput={(params) => <TextField {...params} label="Origin" size="small" />}
-                size="small"
-                sx={{ mt: 2 }}
+            <LocationPicker
+                value={originLocationId}
+                onChange={onOriginChange}
+                locationList={locationList}
+                label="Origin"
+                planId={planId}
             />
         )}
 
-        <Autocomplete
-            options={locationList}
-            getOptionLabel={(option) => option.name || ''}
-            value={locationList.find(l => l.id === destinationLocationId) ?? null}
-            onChange={(_, value) => onDestinationChange(value?.id ?? null)}
-            isOptionEqualToValue={(a, b) => a.id === b.id}
-            renderInput={(params) => <TextField {...params} label="Destination" size="small" />}
-            size="small"
-            sx={{ mt: 2 }}
+        <LocationPicker
+            value={destinationLocationId}
+            onChange={onDestinationChange}
+            locationList={locationList}
+            label="Destination"
+            planId={planId}
         />
 
         <Box sx={{ mt: 2 }}>
@@ -111,6 +107,7 @@ const RouteForm = ({
             onEdit={onEditTime}
             timeList={timeList}
             label={timeMode === 'depart_at' ? 'Departure Time' : 'Arrival Time'}
+            planId={planId}
         />
 
         <Box sx={{ display: 'flex', gap: 1, mt: 2, alignItems: 'center' }}>
@@ -134,29 +131,12 @@ const RouteForm = ({
         )}
 
         {routeOptions.length > 0 && (
-            <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {routeOptions.map((option, idx) => (
-                    <Box
-                        key={idx}
-                        onClick={() => onRouteSelect(idx)}
-                        sx={{
-                            p: 1.5,
-                            border: '2px solid',
-                            borderColor: selectedRouteIdx === idx ? 'primary.main' : 'divider',
-                            borderRadius: '8px',
-                            cursor: 'pointer',
-                            backgroundColor: selectedRouteIdx === idx ? 'action.selected' : 'transparent',
-                            '&:hover': { backgroundColor: selectedRouteIdx === idx ? 'action.selected' : 'action.hover' },
-                        }}
-                    >
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                            {option.summary || `Route ${idx + 1}`}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                            {Math.round(option.durationSeconds / 60)} min · {(option.distanceMeters / 1000).toFixed(1)} km
-                        </Typography>
-                    </Box>
-                ))}
+            <Box sx={{ mt: 2 }}>
+                <RouteOptionsPanel
+                    options={routeOptions}
+                    selectedIdx={selectedRouteIdx}
+                    onSelect={onRouteSelect}
+                />
             </Box>
         )}
 

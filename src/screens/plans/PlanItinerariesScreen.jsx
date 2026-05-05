@@ -11,11 +11,13 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import StepBlock from '../../features/itinerary/StepBlock';
-import ItineraryDialog from '../../features/itinerary/ItineraryDialog';
+import ItineraryForm from '../../features/itinerary/ItineraryDialog';
+import Form from '../../components/common/Form';
 import { actions as itineraryActions, selectors as itinerarySelectors } from '../../store/itinerary';
 import { actions as stepActions, selectors as stepSelectors } from '../../store/step';
 import { actions as participantActions, selectors as participantSelectors } from '../../store/participant';
 import { actions as locationActions } from '../../store/location';
+import { actions as uiActions } from '../../store/ui';
 import Itinerary from '../../domain/Itinerary';
 import ROUTES from '../../router/routes';
 
@@ -34,7 +36,6 @@ const PlanItinerariesScreen = () => {
     const steps = useSelector(stepSelectors.list);
     const participants = useSelector(participantSelectors.list);
     const [selectedTab, setSelectedTab] = useState(0);
-    const [itinDialogOpen, setItinDialogOpen] = useState(false);
     const [working, setWorking] = useState(() => new Itinerary());
     const [hoveredStepId, setHoveredStepId] = useState(null);
 
@@ -102,7 +103,7 @@ const PlanItinerariesScreen = () => {
     const handleTabChange = (_, newValue) => {
         if (newValue === itineraries.length) {
             setWorking(new Itinerary());
-            setItinDialogOpen(true);
+            dispatch(uiActions.openDialog('itinerary-new'));
             return;
         }
         setSelectedTab(newValue);
@@ -110,8 +111,6 @@ const PlanItinerariesScreen = () => {
 
     const handleCreateItinerary = () => {
         dispatch(itineraryActions.create({ name: working.name, planId }));
-        setItinDialogOpen(false);
-        setWorking(new Itinerary());
         setSelectedTab(itineraries.length);
     };
 
@@ -138,11 +137,24 @@ const PlanItinerariesScreen = () => {
             <>
                 <Box sx={{ textAlign: 'center', py: 4 }}>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>No itineraries yet.</Typography>
-                    <Button variant="outlined" size="small" startIcon={<AddIcon />} onClick={() => { setWorking(new Itinerary()); setItinDialogOpen(true); }} sx={{ borderRadius: '20px', textTransform: 'none', fontWeight: 600 }}>
+                    <Button variant="outlined" size="small" startIcon={<AddIcon />} onClick={() => { setWorking(new Itinerary()); dispatch(uiActions.openDialog('itinerary-new')); }} sx={{ borderRadius: '20px', textTransform: 'none', fontWeight: 600 }}>
                         Create itinerary
                     </Button>
                 </Box>
-                <ItineraryDialog open={itinDialogOpen} onClose={() => setItinDialogOpen(false)} working={working} setWorking={setWorking} onCreate={handleCreateItinerary} isMutating={itinMutating} />
+                <Form
+                    formType="itinerary"
+                    title="New Itinerary"
+                    maxWidth="xs"
+                    actions={({ onClose }) => (
+                        <>
+                            <Button variant="outlined" size="small" onClick={onClose} sx={{ borderRadius: '20px', textTransform: 'none' }}>Cancel</Button>
+                            <Button variant="contained" size="small" onClick={() => { handleCreateItinerary(); onClose(); }} disabled={itinMutating || !working.isSavable()} sx={{ borderRadius: '20px', textTransform: 'none', fontWeight: 600 }}>Create</Button>
+                        </>
+                    )}
+                    onClose={() => setWorking(new Itinerary())}
+                >
+                    <ItineraryForm working={working} setWorking={setWorking} />
+                </Form>
             </>
         );
     }
@@ -224,7 +236,20 @@ const PlanItinerariesScreen = () => {
                 </Box>
             )}
 
-            <ItineraryDialog open={itinDialogOpen} onClose={() => setItinDialogOpen(false)} working={working} setWorking={setWorking} onCreate={handleCreateItinerary} isMutating={itinMutating} />
+            <Form
+                formType="itinerary"
+                title="New Itinerary"
+                maxWidth="xs"
+                actions={({ onClose }) => (
+                    <>
+                        <Button variant="outlined" size="small" onClick={onClose} sx={{ borderRadius: '20px', textTransform: 'none' }}>Cancel</Button>
+                        <Button variant="contained" size="small" onClick={() => { handleCreateItinerary(); onClose(); }} disabled={itinMutating || !working.isSavable()} sx={{ borderRadius: '20px', textTransform: 'none', fontWeight: 600 }}>Create</Button>
+                    </>
+                )}
+                onClose={() => setWorking(new Itinerary())}
+            >
+                <ItineraryForm working={working} setWorking={setWorking} />
+            </Form>
         </Box>
     );
 };

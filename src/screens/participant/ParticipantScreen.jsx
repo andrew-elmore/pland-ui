@@ -16,8 +16,10 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { actions as participantActions, selectors as participantSelectors } from '../../store/participant';
+import { actions as uiActions } from '../../store/ui';
 import Participant from '../../domain/Participant';
-import ParticipantDialog from '../../features/participant/ParticipantDialog';
+import ParticipantForm from '../../features/participant/ParticipantDialog';
+import Form from '../../components/common/Form';
 
 const ParticipantScreen = () => {
     const { planId } = useParams();
@@ -28,7 +30,6 @@ const ParticipantScreen = () => {
     const isMutating = useSelector(participantSelectors.isMutating);
     const error = useSelector(participantSelectors.error);
 
-    const [dialogOpen, setDialogOpen] = useState(false);
     const [working, setWorking] = useState(() => new Participant());
 
     useEffect(() => {
@@ -37,14 +38,9 @@ const ParticipantScreen = () => {
         }
     }, [dispatch, planId]);
 
-    const handleOpenDialog = () => {
+    const handleOpenCreate = () => {
         setWorking(new Participant());
-        setDialogOpen(true);
-    };
-
-    const handleCloseDialog = () => {
-        setDialogOpen(false);
-        setWorking(new Participant());
+        dispatch(uiActions.openDialog('participant-new'));
     };
 
     const handleChange = (field, value) => {
@@ -59,8 +55,6 @@ const ParticipantScreen = () => {
             email: working.email,
             role: working.role,
         }));
-        setDialogOpen(false);
-        setWorking(new Participant());
     };
 
     const handleRemove = (participantId) => {
@@ -79,7 +73,7 @@ const ParticipantScreen = () => {
         <>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
                 <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Participants</Typography>
-                <Button variant="outlined" size="small" startIcon={<AddIcon />} onClick={handleOpenDialog} sx={{ borderRadius: '20px', textTransform: 'none', fontWeight: 600 }}>
+                <Button variant="outlined" size="small" startIcon={<AddIcon />} onClick={handleOpenCreate} sx={{ borderRadius: '20px', textTransform: 'none', fontWeight: 600 }}>
                     Add
                 </Button>
             </Box>
@@ -120,14 +114,20 @@ const ParticipantScreen = () => {
                 </List>
             )}
 
-            <ParticipantDialog
-                open={dialogOpen}
-                onClose={handleCloseDialog}
-                working={working}
-                onChange={handleChange}
-                onCreate={handleCreate}
-                isMutating={isMutating}
-            />
+            <Form
+                formType="participant"
+                title="Add Participant"
+                maxWidth="xs"
+                actions={({ onClose }) => (
+                    <>
+                        <Button variant="outlined" size="small" onClick={onClose} sx={{ borderRadius: '20px', textTransform: 'none' }}>Cancel</Button>
+                        <Button variant="contained" size="small" onClick={() => { handleCreate(); onClose(); }} disabled={isMutating || !working.isSavable()} sx={{ borderRadius: '20px', textTransform: 'none', fontWeight: 600 }}>Add</Button>
+                    </>
+                )}
+                onClose={() => setWorking(new Participant())}
+            >
+                <ParticipantForm working={working} onChange={handleChange} />
+            </Form>
         </>
     );
 };

@@ -5,10 +5,8 @@ import {
     Box,
     Container,
     Typography,
-    Paper,
     TextField,
     Button,
-    Autocomplete,
     Alert,
     Chip,
 } from '@mui/material';
@@ -22,10 +20,13 @@ import useMutateEffect from '../../hooks/useMutateEffect';
 import ROUTES from '../../router/routes';
 import Route from '../../domain/Route';
 import * as routeService from '../../services/route';
-import TimeFormDialog from '../../components/common/TimeFormDialog';
+import TimeForm from '../../components/common/TimeFormDialog';
+import Form from '../../components/common/Form';
+import { actions as uiActions } from '../../store/ui';
 import ParticipantPicker from '../../features/step/ParticipantPicker';
 import TimeSelector from '../../features/step/TimeSelector';
 import RouteForm from '../../features/step/RouteForm';
+import LocationPicker from '../../features/step/LocationPicker';
 
 const StepEditScreen = () => {
     const { planId, stepId } = useParams();
@@ -59,9 +60,8 @@ const StepEditScreen = () => {
     const [routeOptions, setRouteOptions] = useState([]);
     const [selectedRouteIdx, setSelectedRouteIdx] = useState(null);
     const [previewLoading, setPreviewLoading] = useState(false);
-    const [initialRouteFields, setInitialRouteFields] = useState(null);
 
-    const [timeDialogOpen, setTimeDialogOpen] = useState(false);
+
     const [editingTime, setEditingTime] = useState(null);
 
     useEffect(() => {
@@ -94,14 +94,6 @@ const StepEditScreen = () => {
                 setTransitModes(step.route.transitModes || []);
                 setTimeMode(step.route.timeMode);
                 setRouteTimeId(step.route.timeMode === 'depart_at' ? step.startTimeId : step.endTimeId);
-                setInitialRouteFields({
-                    originLocationId: step.route.originLocationId,
-                    destinationLocationId: step.route.destinationLocationId,
-                    travelMode: step.route.travelMode,
-                    transitModesKey: (step.route.transitModes || []).join(','),
-                    timeMode: step.route.timeMode,
-                    routeTimeId: step.route.timeMode === 'depart_at' ? step.startTimeId : step.endTimeId,
-                });
                 const computedTimeId = step.route.timeMode === 'depart_at' ? step.endTimeId : step.startTimeId;
                 const computedTime = [...times].find(t => t.id === computedTimeId);
                 if (!computedTime) return;
@@ -133,7 +125,7 @@ const StepEditScreen = () => {
 
         if (isRouteStep) {
             if (!originLocationId || !destinationLocationId || !routeTimeId) return;
-            if (routeChanged && selectedRouteIdx === null) return;
+            if (routeOptions.length > 0 && selectedRouteIdx === null) return;
             const payload = {
                 name: stepName.trim(),
                 participantIds: stepParticipantIds,
@@ -145,7 +137,7 @@ const StepEditScreen = () => {
                 timeMode,
                 paddingSeconds: (parseInt(paddingHours, 10) || 0) * 3600 + (parseInt(paddingMinutes, 10) || 0) * 60,
             };
-            if (routeChanged) payload.routeData = routeOptions[selectedRouteIdx];
+            if (selectedRouteIdx !== null) payload.routeData = routeOptions[selectedRouteIdx];
             submit(stepActions.update(stepId, payload));
         } else {
             if (!stepStartTimeId || !stepEndTimeId) return;
@@ -210,7 +202,7 @@ const StepEditScreen = () => {
         const time = [...times].find(t => t.id === timeId);
         if (time) {
             setEditingTime(time);
-            setTimeDialogOpen(true);
+            dispatch(uiActions.openDialog(`time-${time.id}`));
         }
     };
 
@@ -218,8 +210,6 @@ const StepEditScreen = () => {
         if (editingTime) {
             dispatch(timeActions.update(editingTime.id, data));
         }
-        setTimeDialogOpen(false);
-        setEditingTime(null);
     };
 
     if (isLoading && !isLoaded) {
@@ -228,7 +218,7 @@ const StepEditScreen = () => {
 
     if (isLoaded && !step?.id) {
         return (
-            <Container maxWidth="sm">
+            <Container maxWidth={false}>
                 <Box py={4}><Alert severity="warning">Step not found</Alert></Box>
             </Container>
         );
@@ -237,159 +227,154 @@ const StepEditScreen = () => {
     const timeList = [...times];
     const locationList = [...locations];
 
-    const routeChanged = initialized && isRouteStep && (
-        initialRouteFields === null || (
-            originLocationId !== initialRouteFields.originLocationId ||
-            destinationLocationId !== initialRouteFields.destinationLocationId ||
-            travelMode !== initialRouteFields.travelMode ||
-            transitModes.join(',') !== initialRouteFields.transitModesKey ||
-            timeMode !== initialRouteFields.timeMode ||
-            routeTimeId !== initialRouteFields.routeTimeId
-        )
-    );
-
     const isSubmitDisabled = isMutating
         || !stepName.trim()
         || stepParticipantIds.length === 0
-        || (isRouteStep ? (!originLocationId || !destinationLocationId || !routeTimeId || (routeChanged && selectedRouteIdx === null)) : (!stepStartTimeId || !stepEndTimeId));
+        || (isRouteStep ? (!originLocationId || !destinationLocationId || !routeTimeId || (routeOptions.length > 0 && selectedRouteIdx === null)) : (!stepStartTimeId || !stepEndTimeId));
 
     return (
-        <Container maxWidth="sm">
+        <Container maxWidth={false}>
             <Box py={4}>
-                <Paper elevation={3} sx={{ p: 4 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-                        <Typography variant="h5">Edit Step</Typography>
-                        {isRouteStep && step.route && (
-                            <Chip
-                                label={`${Route.TRAVEL_MODE_LABELS[step.route.travelMode]} · ${Math.round(step.route.durationSeconds / 60)} min`}
-                                size="small"
-                                variant="outlined"
-                            />
-                        )}
-                    </Box>
-
-                    {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-
-                    <TextField
-                        autoFocus
-                        label="Name"
-                        fullWidth
-                        value={stepName}
-                        onChange={(e) => setStepName(e.target.value)}
-                        size="small"
-                    />
-
-                    <ParticipantPicker
-                        participantIds={stepParticipantIds}
-                        onChange={setStepParticipantIds}
-                        participants={participants}
-                        groups={groups}
-                    />
-
-                    {isRouteStep ? (
-                        <RouteForm
-                            originLocationId={originLocationId}
-                            onOriginChange={setOriginLocationId}
-                            showOrigin={true}
-                            destinationLocationId={destinationLocationId}
-                            onDestinationChange={setDestinationLocationId}
-                            travelMode={travelMode}
-                            onTravelModeChange={setTravelMode}
-                            transitModes={transitModes}
-                            onTransitModesChange={setTransitModes}
-                            timeMode={timeMode}
-                            onTimeModeChange={setTimeMode}
-                            routeTimeId={routeTimeId}
-                            onRouteTimeChange={setRouteTimeId}
-                            paddingHours={paddingHours}
-                            onPaddingHoursChange={setPaddingHours}
-                            paddingMinutes={paddingMinutes}
-                            onPaddingMinutesChange={setPaddingMinutes}
-                            routeOptions={routeOptions}
-                            selectedRouteIdx={selectedRouteIdx}
-                            onRouteSelect={setSelectedRouteIdx}
-                            previewLoading={previewLoading}
-                            onPreview={handlePreview}
-                            showPreview={routeChanged}
-                            onRemoveDestination={handleToggleRoute}
-                            locationList={locationList}
-                            timeList={timeList}
-                            onEditTime={handleEditTime}
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+                    <Typography variant="h5">Edit Step</Typography>
+                    {isRouteStep && step.route && (
+                        <Chip
+                            label={`${Route.TRAVEL_MODE_LABELS[step.route.travelMode]} · ${Math.round(step.route.durationSeconds / 60)} min`}
+                            size="small"
+                            variant="outlined"
                         />
-                    ) : (
-                        <>
-                            <Autocomplete
-                                options={locationList}
-                                getOptionLabel={(option) => option.name || ''}
-                                value={locationList.find(l => l.id === stepLocationId) ?? null}
-                                onChange={(_, value) => setStepLocationId(value?.id ?? null)}
-                                isOptionEqualToValue={(a, b) => a.id === b.id}
-                                renderInput={(params) => (
-                                    <TextField {...params} label="Location (optional)" size="small" />
-                                )}
-                                size="small"
-                                sx={{ mt: 2 }}
-                            />
-
-                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
-                                <Button
-                                    size="small"
-                                    startIcon={<DirectionsIcon />}
-                                    onClick={handleToggleRoute}
-                                    sx={{ textTransform: 'none', fontSize: '0.75rem' }}
-                                >
-                                    Add Destination
-                                </Button>
-                            </Box>
-
-                            <TimeSelector
-                                value={stepStartTimeId}
-                                onChange={setStepStartTimeId}
-                                onEdit={handleEditTime}
-                                timeList={timeList}
-                                label="Start Time"
-                            />
-
-                            <TimeSelector
-                                value={stepEndTimeId}
-                                onChange={setStepEndTimeId}
-                                onEdit={handleEditTime}
-                                timeList={timeList}
-                                label="End Time"
-                            />
-                        </>
                     )}
+                </Box>
 
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-                        <Button variant="outlined" color="error" size="small" onClick={handleDelete} disabled={isMutating} sx={{ borderRadius: '20px', textTransform: 'none' }}>
-                            Delete
-                        </Button>
-                        <Box sx={{ display: 'flex', gap: 1 }}>
-                            <Button variant="outlined" size="small" onClick={handleCancel} sx={{ borderRadius: '20px', textTransform: 'none' }}>
-                                Cancel
-                            </Button>
+                {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
+                <TextField
+                    autoFocus
+                    label="Name"
+                    fullWidth
+                    value={stepName}
+                    onChange={(e) => setStepName(e.target.value)}
+                    size="small"
+                />
+
+                <ParticipantPicker
+                    participantIds={stepParticipantIds}
+                    onChange={setStepParticipantIds}
+                    participants={participants}
+                    groups={groups}
+                    planId={planId}
+                />
+
+                {isRouteStep ? (
+                    <RouteForm
+                        originLocationId={originLocationId}
+                        onOriginChange={setOriginLocationId}
+                        showOrigin={true}
+                        destinationLocationId={destinationLocationId}
+                        onDestinationChange={setDestinationLocationId}
+                        travelMode={travelMode}
+                        onTravelModeChange={setTravelMode}
+                        transitModes={transitModes}
+                        onTransitModesChange={setTransitModes}
+                        timeMode={timeMode}
+                        onTimeModeChange={setTimeMode}
+                        routeTimeId={routeTimeId}
+                        onRouteTimeChange={setRouteTimeId}
+                        paddingHours={paddingHours}
+                        onPaddingHoursChange={setPaddingHours}
+                        paddingMinutes={paddingMinutes}
+                        onPaddingMinutesChange={setPaddingMinutes}
+                        routeOptions={routeOptions}
+                        selectedRouteIdx={selectedRouteIdx}
+                        onRouteSelect={setSelectedRouteIdx}
+                        previewLoading={previewLoading}
+                        onPreview={handlePreview}
+                        showPreview={true}
+                        onRemoveDestination={handleToggleRoute}
+                        locationList={locationList}
+                        timeList={timeList}
+                        onEditTime={handleEditTime}
+                        planId={planId}
+                    />
+                ) : (
+                    <>
+                        <LocationPicker
+                            value={stepLocationId}
+                            onChange={setStepLocationId}
+                            locationList={locationList}
+                            label="Location (optional)"
+                            planId={planId}
+                        />
+
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
                             <Button
-                                variant="contained"
                                 size="small"
-                                onClick={handleSubmit}
-                                disabled={isSubmitDisabled}
-                                sx={{ borderRadius: '20px', textTransform: 'none', fontWeight: 600 }}
+                                startIcon={<DirectionsIcon />}
+                                onClick={handleToggleRoute}
+                                sx={{ textTransform: 'none', fontSize: '0.75rem' }}
                             >
-                                Save
+                                    Add Destination
                             </Button>
                         </Box>
+
+                        <TimeSelector
+                            value={stepStartTimeId}
+                            onChange={setStepStartTimeId}
+                            onEdit={handleEditTime}
+                            timeList={timeList}
+                            label="Start Time"
+                            planId={planId}
+                        />
+
+                        <TimeSelector
+                            value={stepEndTimeId}
+                            onChange={setStepEndTimeId}
+                            onEdit={handleEditTime}
+                            timeList={timeList}
+                            label="End Time"
+                            planId={planId}
+                        />
+                    </>
+                )}
+
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+                    <Button variant="outlined" color="error" size="small" onClick={handleDelete} disabled={isMutating} sx={{ borderRadius: '20px', textTransform: 'none' }}>
+                            Delete
+                    </Button>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Button variant="outlined" size="small" onClick={handleCancel} sx={{ borderRadius: '20px', textTransform: 'none' }}>
+                                Cancel
+                        </Button>
+                        <Button
+                            variant="contained"
+                            size="small"
+                            onClick={handleSubmit}
+                            disabled={isSubmitDisabled}
+                            sx={{ borderRadius: '20px', textTransform: 'none', fontWeight: 600 }}
+                        >
+                                Save
+                        </Button>
                     </Box>
-                </Paper>
+                </Box>
             </Box>
 
-            <TimeFormDialog
-                open={timeDialogOpen}
-                onClose={() => { setTimeDialogOpen(false); setEditingTime(null); }}
-                planId={planId}
-                times={times}
-                editingTime={editingTime}
-                onSubmit={handleSubmitTime}
-            />
+            <Form
+                formType="time"
+                formData={editingTime}
+                title="Edit Time"
+                maxWidth="xs"
+                onClose={() => setEditingTime(null)}
+            >
+                {({ onClose }) => (
+                    <TimeForm
+                        onClose={onClose}
+                        planId={planId}
+                        times={times}
+                        editingTime={editingTime}
+                        onSubmit={handleSubmitTime}
+                    />
+                )}
+            </Form>
         </Container>
     );
 };

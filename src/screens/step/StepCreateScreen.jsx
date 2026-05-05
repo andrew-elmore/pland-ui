@@ -5,10 +5,8 @@ import {
     Box,
     Container,
     Typography,
-    Paper,
     TextField,
     Button,
-    Autocomplete,
     ToggleButtonGroup,
     ToggleButton,
 } from '@mui/material';
@@ -22,10 +20,13 @@ import useMutateEffect from '../../hooks/useMutateEffect';
 import ROUTES from '../../router/routes';
 import Route from '../../domain/Route';
 import * as routeService from '../../services/route';
-import TimeFormDialog from '../../components/common/TimeFormDialog';
+import TimeForm from '../../components/common/TimeFormDialog';
+import Form from '../../components/common/Form';
+import { actions as uiActions } from '../../store/ui';
 import ParticipantPicker from '../../features/step/ParticipantPicker';
 import TimeSelector from '../../features/step/TimeSelector';
 import RouteForm from '../../features/step/RouteForm';
+import LocationPicker from '../../features/step/LocationPicker';
 
 const StepCreateScreen = () => {
     const { planId, itineraryId } = useParams();
@@ -72,7 +73,6 @@ const StepCreateScreen = () => {
     const [durationMinutes, setDurationMinutes] = useState('');
     const [derivedTimeLabel, setDerivedTimeLabel] = useState('');
 
-    const [timeDialogOpen, setTimeDialogOpen] = useState(false);
     const [editingTime, setEditingTime] = useState(null);
 
     useEffect(() => {
@@ -192,7 +192,7 @@ const StepCreateScreen = () => {
         const time = [...times].find(t => t.id === timeId);
         if (time) {
             setEditingTime(time);
-            setTimeDialogOpen(true);
+            dispatch(uiActions.openDialog(`time-${time.id}`));
         }
     };
 
@@ -200,8 +200,6 @@ const StepCreateScreen = () => {
         if (editingTime) {
             dispatch(timeActions.update(editingTime.id, data));
         }
-        setTimeDialogOpen(false);
-        setEditingTime(null);
     };
 
     const timeList = [...times];
@@ -218,189 +216,196 @@ const StepCreateScreen = () => {
     const isSubmitDisabled = isMutating || !stepName.trim() || stepParticipantIds.length === 0 || !isTimeValid;
 
     return (
-        <Container maxWidth="sm">
+        <Container maxWidth={false}>
             <Box py={4}>
-                <Paper elevation={3} sx={{ p: 4 }}>
-                    <Box mb={3}>
-                        <Typography variant="h5" gutterBottom>Add Step</Typography>
-                    </Box>
+                <Box mb={3}>
+                    <Typography variant="h5" gutterBottom>Add Step</Typography>
+                </Box>
 
-                    <TextField
-                        autoFocus
-                        label="Name"
-                        fullWidth
-                        value={stepName}
-                        onChange={(e) => setStepName(e.target.value)}
-                        size="small"
-                    />
+                <TextField
+                    autoFocus
+                    label="Name"
+                    fullWidth
+                    value={stepName}
+                    onChange={(e) => setStepName(e.target.value)}
+                    size="small"
+                />
 
-                    <ParticipantPicker
-                        participantIds={stepParticipantIds}
-                        onChange={setStepParticipantIds}
-                        participants={participants}
-                        groups={groups}
-                    />
+                <ParticipantPicker
+                    participantIds={stepParticipantIds}
+                    onChange={setStepParticipantIds}
+                    participants={participants}
+                    groups={groups}
+                    planId={planId}
+                />
 
-                    <Autocomplete
-                        options={locationList}
-                        getOptionLabel={(option) => option.name || ''}
-                        value={locationList.find(l => l.id === stepLocationId) ?? null}
-                        onChange={(_, value) => setStepLocationId(value?.id ?? null)}
-                        isOptionEqualToValue={(a, b) => a.id === b.id}
-                        renderInput={(params) => (
-                            <TextField {...params} label={isRouteStep ? 'Origin' : 'Location (optional)'} size="small" />
-                        )}
-                        size="small"
-                        sx={{ mt: 2 }}
-                    />
-
-                    {!isRouteStep && (
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
-                            <Button
-                                size="small"
-                                startIcon={<DirectionsIcon />}
-                                onClick={handleToggleRoute}
-                                sx={{ textTransform: 'none', fontSize: '0.75rem' }}
-                            >
-                                Add Destination
-                            </Button>
-                        </Box>
-                    )}
-
-                    {isRouteStep && (
-                        <RouteForm
-                            originLocationId={stepLocationId}
-                            onOriginChange={setStepLocationId}
-                            showOrigin={false}
-                            destinationLocationId={destinationLocationId}
-                            onDestinationChange={setDestinationLocationId}
-                            travelMode={travelMode}
-                            onTravelModeChange={setTravelMode}
-                            transitModes={transitModes}
-                            onTransitModesChange={setTransitModes}
-                            timeMode={timeMode}
-                            onTimeModeChange={setTimeMode}
-                            routeTimeId={routeTimeId}
-                            onRouteTimeChange={setRouteTimeId}
-                            paddingHours={paddingHours}
-                            onPaddingHoursChange={setPaddingHours}
-                            paddingMinutes={paddingMinutes}
-                            onPaddingMinutesChange={setPaddingMinutes}
-                            routeOptions={routeOptions}
-                            selectedRouteIdx={selectedRouteIdx}
-                            onRouteSelect={setSelectedRouteIdx}
-                            previewLoading={previewLoading}
-                            onPreview={handlePreview}
-                            showPreview={true}
-                            onRemoveDestination={handleToggleRoute}
-                            locationList={locationList}
-                            timeList={timeList}
-                            onEditTime={handleEditTime}
-                        />
-                    )}
-
-                    {!isRouteStep && (
-                        <>
-                            <Box sx={{ mt: 2 }}>
-                                <ToggleButtonGroup
-                                    value={timeEntryMode}
-                                    exclusive
-                                    onChange={(_, v) => { if (v) setTimeEntryMode(v); }}
-                                    size="small"
-                                    fullWidth
-                                >
-                                    {!hasEndParam && (
-                                        <ToggleButton value="after" sx={{ textTransform: 'none', fontWeight: 600 }}>After</ToggleButton>
-                                    )}
-                                    <ToggleButton value="from-till" sx={{ textTransform: 'none', fontWeight: 600 }}>From-Till</ToggleButton>
-                                    {!hasStartParam && (
-                                        <ToggleButton value="before" sx={{ textTransform: 'none', fontWeight: 600 }}>Before</ToggleButton>
-                                    )}
-                                </ToggleButtonGroup>
-                            </Box>
-
-                            {timeEntryMode === 'after' && (
-                                <>
-                                    <TimeSelector
-                                        value={stepStartTimeId}
-                                        onChange={setStepStartTimeId}
-                                        onEdit={handleEditTime}
-                                        timeList={timeList}
-                                        label="Start Time"
-                                    />
-                                    <Box sx={{ display: 'flex', gap: 1, mt: 2, alignItems: 'center' }}>
-                                        <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>Duration</Typography>
-                                        <TextField label="Hours" type="number" size="small" value={durationHours} onChange={(e) => setDurationHours(e.target.value)} slotProps={{ htmlInput: { min: 0 } }} sx={{ width: 80 }} />
-                                        <TextField label="Min" type="number" size="small" value={durationMinutes} onChange={(e) => setDurationMinutes(e.target.value)} slotProps={{ htmlInput: { min: 0, max: 59 } }} sx={{ width: 80 }} />
-                                    </Box>
-                                    <TextField label="End Time Label (optional)" fullWidth size="small" value={derivedTimeLabel} onChange={(e) => setDerivedTimeLabel(e.target.value)} placeholder={`${stepName || 'Event'} End`} sx={{ mt: 2 }} />
-                                </>
-                            )}
-
-                            {timeEntryMode === 'from-till' && (
-                                <>
-                                    <TimeSelector
-                                        value={stepStartTimeId}
-                                        onChange={setStepStartTimeId}
-                                        onEdit={handleEditTime}
-                                        timeList={timeList}
-                                        label="Start Time"
-                                    />
-                                    <TimeSelector
-                                        value={stepEndTimeId}
-                                        onChange={setStepEndTimeId}
-                                        onEdit={handleEditTime}
-                                        timeList={timeList}
-                                        label="End Time"
-                                    />
-                                </>
-                            )}
-
-                            {timeEntryMode === 'before' && (
-                                <>
-                                    <TimeSelector
-                                        value={stepEndTimeId}
-                                        onChange={setStepEndTimeId}
-                                        onEdit={handleEditTime}
-                                        timeList={timeList}
-                                        label="End Time"
-                                    />
-                                    <Box sx={{ display: 'flex', gap: 1, mt: 2, alignItems: 'center' }}>
-                                        <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>Duration</Typography>
-                                        <TextField label="Hours" type="number" size="small" value={durationHours} onChange={(e) => setDurationHours(e.target.value)} slotProps={{ htmlInput: { min: 0 } }} sx={{ width: 80 }} />
-                                        <TextField label="Min" type="number" size="small" value={durationMinutes} onChange={(e) => setDurationMinutes(e.target.value)} slotProps={{ htmlInput: { min: 0, max: 59 } }} sx={{ width: 80 }} />
-                                    </Box>
-                                    <TextField label="Start Time Label (optional)" fullWidth size="small" value={derivedTimeLabel} onChange={(e) => setDerivedTimeLabel(e.target.value)} placeholder={`${stepName || 'Event'} Start`} sx={{ mt: 2 }} />
-                                </>
-                            )}
-                        </>
-                    )}
-
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 3 }}>
-                        <Button variant="outlined" size="small" onClick={handleCancel} sx={{ borderRadius: '20px', textTransform: 'none' }}>
-                            Cancel
-                        </Button>
+                <LocationPicker
+                    value={stepLocationId}
+                    onChange={setStepLocationId}
+                    locationList={locationList}
+                    label={isRouteStep ? 'Origin' : 'Location (optional)'}
+                    planId={planId}
+                />
+                {!isRouteStep && (
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
                         <Button
-                            variant="contained"
                             size="small"
-                            onClick={handleSubmit}
-                            disabled={isSubmitDisabled}
-                            sx={{ borderRadius: '20px', textTransform: 'none', fontWeight: 600 }}
+                            startIcon={<DirectionsIcon />}
+                            onClick={handleToggleRoute}
+                            sx={{ textTransform: 'none', fontSize: '0.75rem' }}
                         >
-                            Create
+                                Add Destination
                         </Button>
                     </Box>
-                </Paper>
+                )}
+
+                {isRouteStep && (
+                    <RouteForm
+                        originLocationId={stepLocationId}
+                        onOriginChange={setStepLocationId}
+                        showOrigin={false}
+                        destinationLocationId={destinationLocationId}
+                        onDestinationChange={setDestinationLocationId}
+                        travelMode={travelMode}
+                        onTravelModeChange={setTravelMode}
+                        transitModes={transitModes}
+                        onTransitModesChange={setTransitModes}
+                        timeMode={timeMode}
+                        onTimeModeChange={setTimeMode}
+                        routeTimeId={routeTimeId}
+                        onRouteTimeChange={setRouteTimeId}
+                        paddingHours={paddingHours}
+                        onPaddingHoursChange={setPaddingHours}
+                        paddingMinutes={paddingMinutes}
+                        onPaddingMinutesChange={setPaddingMinutes}
+                        routeOptions={routeOptions}
+                        selectedRouteIdx={selectedRouteIdx}
+                        onRouteSelect={setSelectedRouteIdx}
+                        previewLoading={previewLoading}
+                        onPreview={handlePreview}
+                        showPreview={true}
+                        onRemoveDestination={handleToggleRoute}
+                        locationList={locationList}
+                        timeList={timeList}
+                        onEditTime={handleEditTime}
+                        planId={planId}
+                    />
+                )}
+
+                {!isRouteStep && (
+                    <>
+                        <Box sx={{ mt: 2 }}>
+                            <ToggleButtonGroup
+                                value={timeEntryMode}
+                                exclusive
+                                onChange={(_, v) => { if (v) setTimeEntryMode(v); }}
+                                size="small"
+                                fullWidth
+                            >
+                                {!hasEndParam && (
+                                    <ToggleButton value="after" sx={{ textTransform: 'none', fontWeight: 600 }}>After</ToggleButton>
+                                )}
+                                <ToggleButton value="from-till" sx={{ textTransform: 'none', fontWeight: 600 }}>From-Till</ToggleButton>
+                                {!hasStartParam && (
+                                    <ToggleButton value="before" sx={{ textTransform: 'none', fontWeight: 600 }}>Before</ToggleButton>
+                                )}
+                            </ToggleButtonGroup>
+                        </Box>
+
+                        {timeEntryMode === 'after' && (
+                            <>
+                                <TimeSelector
+                                    value={stepStartTimeId}
+                                    onChange={setStepStartTimeId}
+                                    onEdit={handleEditTime}
+                                    timeList={timeList}
+                                    label="Start Time"
+                                    planId={planId}
+                                />
+                                <Box sx={{ display: 'flex', gap: 1, mt: 2, alignItems: 'center' }}>
+                                    <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>Duration</Typography>
+                                    <TextField label="Hours" type="number" size="small" value={durationHours} onChange={(e) => setDurationHours(e.target.value)} slotProps={{ htmlInput: { min: 0 } }} sx={{ width: 80 }} />
+                                    <TextField label="Min" type="number" size="small" value={durationMinutes} onChange={(e) => setDurationMinutes(e.target.value)} slotProps={{ htmlInput: { min: 0, max: 59 } }} sx={{ width: 80 }} />
+                                </Box>
+                                <TextField label="End Time Label (optional)" fullWidth size="small" value={derivedTimeLabel} onChange={(e) => setDerivedTimeLabel(e.target.value)} placeholder={`${stepName || 'Event'} End`} sx={{ mt: 2 }} />
+                            </>
+                        )}
+
+                        {timeEntryMode === 'from-till' && (
+                            <>
+                                <TimeSelector
+                                    value={stepStartTimeId}
+                                    onChange={setStepStartTimeId}
+                                    onEdit={handleEditTime}
+                                    timeList={timeList}
+                                    label="Start Time"
+                                    planId={planId}
+                                />
+                                <TimeSelector
+                                    value={stepEndTimeId}
+                                    onChange={setStepEndTimeId}
+                                    onEdit={handleEditTime}
+                                    timeList={timeList}
+                                    label="End Time"
+                                    planId={planId}
+                                />
+                            </>
+                        )}
+
+                        {timeEntryMode === 'before' && (
+                            <>
+                                <TimeSelector
+                                    value={stepEndTimeId}
+                                    onChange={setStepEndTimeId}
+                                    onEdit={handleEditTime}
+                                    timeList={timeList}
+                                    label="End Time"
+                                    planId={planId}
+                                />
+                                <Box sx={{ display: 'flex', gap: 1, mt: 2, alignItems: 'center' }}>
+                                    <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>Duration</Typography>
+                                    <TextField label="Hours" type="number" size="small" value={durationHours} onChange={(e) => setDurationHours(e.target.value)} slotProps={{ htmlInput: { min: 0 } }} sx={{ width: 80 }} />
+                                    <TextField label="Min" type="number" size="small" value={durationMinutes} onChange={(e) => setDurationMinutes(e.target.value)} slotProps={{ htmlInput: { min: 0, max: 59 } }} sx={{ width: 80 }} />
+                                </Box>
+                                <TextField label="Start Time Label (optional)" fullWidth size="small" value={derivedTimeLabel} onChange={(e) => setDerivedTimeLabel(e.target.value)} placeholder={`${stepName || 'Event'} Start`} sx={{ mt: 2 }} />
+                            </>
+                        )}
+                    </>
+                )}
+
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 3 }}>
+                    <Button variant="outlined" size="small" onClick={handleCancel} sx={{ borderRadius: '20px', textTransform: 'none' }}>
+                            Cancel
+                    </Button>
+                    <Button
+                        variant="contained"
+                        size="small"
+                        onClick={handleSubmit}
+                        disabled={isSubmitDisabled}
+                        sx={{ borderRadius: '20px', textTransform: 'none', fontWeight: 600 }}
+                    >
+                            Create
+                    </Button>
+                </Box>
             </Box>
 
-            <TimeFormDialog
-                open={timeDialogOpen}
-                onClose={() => { setTimeDialogOpen(false); setEditingTime(null); }}
-                planId={planId}
-                times={times}
-                editingTime={editingTime}
-                onSubmit={handleSubmitTime}
-            />
+            <Form
+                formType="time"
+                formData={editingTime}
+                title="Edit Time"
+                maxWidth="xs"
+                onClose={() => setEditingTime(null)}
+            >
+                {({ onClose }) => (
+                    <TimeForm
+                        onClose={onClose}
+                        planId={planId}
+                        times={times}
+                        editingTime={editingTime}
+                        onSubmit={handleSubmitTime}
+                    />
+                )}
+            </Form>
         </Container>
     );
 };

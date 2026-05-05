@@ -3,9 +3,12 @@ import { createSelector } from '@reduxjs/toolkit';
 const SHOW_NOTIFICATION = 'SHOW_NOTIFICATION';
 const REMOVE_NOTIFICATION = 'REMOVE_NOTIFICATION';
 const CLEAR_ALL_NOTIFICATIONS = 'CLEAR_ALL_NOTIFICATIONS';
+const OPEN_DIALOG = 'OPEN_DIALOG';
+const CLOSE_DIALOG = 'CLOSE_DIALOG';
 
 const initialState = {
     notifications: [],
+    openDialog: null,
     error: null,
 };
 
@@ -97,6 +100,14 @@ export function reducer(inboundState = initialState, action) {
         };
     }
 
+    case OPEN_DIALOG: {
+        return { ...state, openDialog: action.meta.id };
+    }
+
+    case CLOSE_DIALOG: {
+        return { ...state, openDialog: null };
+    }
+
     default: {
         return state;
     }
@@ -138,6 +149,9 @@ export const actions = {
         type: CLEAR_ALL_NOTIFICATIONS,
         payload: Promise.resolve(null),
     }),
+
+    openDialog: (id) => ({ type: OPEN_DIALOG, meta: { id } }),
+    closeDialog: () => ({ type: CLOSE_DIALOG }),
 };
 
 export const selectors = {
@@ -147,6 +161,8 @@ export const selectors = {
         [(state) => state.ui.notifications],
         (notifications) => notifications.length,
     ),
+
+    openDialog: (state) => state.ui.openDialog,
 
     error: (state) => state.ui.error,
 };

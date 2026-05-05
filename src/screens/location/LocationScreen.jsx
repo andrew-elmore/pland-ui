@@ -16,7 +16,9 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PlaceIcon from '@mui/icons-material/Place';
 import { actions as locationActions, selectors as locationSelectors } from '../../store/location';
-import LocationDialog from '../../features/location/LocationDialog';
+import { actions as uiActions } from '../../store/ui';
+import LocationForm from '../../features/location/LocationDialog';
+import Form from '../../components/common/Form';
 
 const LocationScreen = () => {
     const { planId } = useParams();
@@ -26,8 +28,6 @@ const LocationScreen = () => {
     const { isLoading, isLoaded } = useSelector(locationSelectors.listMeta);
     const isMutating = useSelector(locationSelectors.isMutating);
     const error = useSelector(locationSelectors.error);
-
-    const [dialogOpen, setDialogOpen] = React.useState(false);
 
     useEffect(() => {
         if (planId) {
@@ -55,7 +55,7 @@ const LocationScreen = () => {
         <>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
                 <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Locations</Typography>
-                <Button variant="outlined" size="small" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)} sx={{ borderRadius: '20px', textTransform: 'none', fontWeight: 600 }}>
+                <Button variant="outlined" size="small" startIcon={<AddIcon />} onClick={() => dispatch(uiActions.openDialog('location-new'))} sx={{ borderRadius: '20px', textTransform: 'none', fontWeight: 600 }}>
                     Add
                 </Button>
             </Box>
@@ -95,12 +95,15 @@ const LocationScreen = () => {
                 </List>
             )}
 
-            <LocationDialog
-                open={dialogOpen}
-                onClose={() => setDialogOpen(false)}
-                onCreate={handleCreate}
-                isMutating={isMutating}
-            />
+            <Form
+                formType="location"
+                title="Add Location"
+                maxWidth="sm"
+            >
+                {({ onClose }) => (
+                    <LocationForm onClose={onClose} onCreate={handleCreate} isMutating={isMutating} />
+                )}
+            </Form>
         </>
     );
 };
