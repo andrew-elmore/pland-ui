@@ -141,28 +141,79 @@ Three loading components for different contexts:
 <LoadingSpinner size={40} />
 ```
 
-## Dialog pattern
+## Form system
+
+**The test: if a UI surface has input fields and a submit action, it is a form. All forms must use the `Form` component.** Do not use raw MUI `<Dialog>` for forms. Do not manage form open/close state with local `useState` booleans. The Form system centralizes dialog lifecycle and ensures cleanup runs consistently — bypassing it creates stale-state bugs.
+
+### How it works
+
+`Form` (`common/Form.jsx`) manages form identity and open/close lifecycle. `AppDialog` (`common/AppDialog.jsx`) renders the underlying MUI Dialog. Visibility is controlled through Redux via `uiActions.openDialog(formId)` and `uiActions.closeDialog()`.
+
+The `formId` is derived automatically: `${formType}-${formData?.id ?? 'new'}`. To open a form, dispatch `openDialog` with the matching formId. Closing happens automatically when the user clicks X or the backdrop, or when your code calls the `onClose` callback provided by Form.
+
+### Usage with actions prop
+
+Use this pattern when the parent screen owns the save logic and action buttons belong in the dialog footer:
 
 ```javascript
-<Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth disableRestoreFocus>
-    <DialogTitle sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText' }}>
-        Title
-        <IconButton onClick={handleClose} sx={{ position: 'absolute', right: 8, top: 8 }}>
-            <CloseIcon />
-        </IconButton>
-    </DialogTitle>
-    <DialogContent>
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        {/* form fields */}
-    </DialogContent>
-    <DialogActions>
-        <Button variant="outlined" onClick={handleClose}>Cancel</Button>
-        <Button variant="contained" onClick={handleSave} disabled={isMutating || !working.isSavable()}>
-            Save
-        </Button>
-    </DialogActions>
-</Dialog>
+<Form
+    formType="itinerary"
+    title="New Itinerary"
+    maxWidth="xs"
+    actions={({ onClose }) => (
+        <>
+            <Button variant="outlined" size="small" onClick={onClose}>Cancel</Button>
+            <Button variant="contained" size="small" onClick={() => { handleSave(); onClose(); }} disabled={isMutating || !working.isSavable()}>Create</Button>
+        </>
+    )}
+    onClose={() => setWorking(new Itinerary())}
+>
+    <ItineraryForm working={working} setWorking={setWorking} />
+</Form>
 ```
+
+Opening the dialog:
+
+```javascript
+dispatch(uiActions.openDialog('itinerary-new'));
+```
+
+### Usage with children render function
+
+Use this pattern when the form component manages its own submit and renders its own buttons:
+
+```javascript
+<Form
+    formType="time"
+    formData={editingTime}
+    title="Edit Time"
+    maxWidth="xs"
+    onClose={() => setEditingTime(null)}
+>
+    {({ onClose }) => (
+        <TimeForm onClose={onClose} planId={planId} onSubmit={handleSubmitTime} />
+    )}
+</Form>
+```
+
+Opening the dialog for an existing record:
+
+```javascript
+dispatch(uiActions.openDialog(`time-${time.id}`));
+```
+
+### Props
+
+- `formType` — string prefix for the formId (e.g. `"location"`, `"time"`, `"itinerary"`)
+- `formData` — the record being edited, or omit for creation. Its `id` is used to build the formId
+- `title` — dialog title
+- `maxWidth` — MUI Dialog maxWidth (`"xs"`, `"sm"`, `"md"`, etc.)
+- `onClose` — cleanup callback. Runs on any close (X button, backdrop, or programmatic). Use this to reset editing state
+- `actions` — render function `({ onClose }) => JSX` for dialog footer buttons
+- `children` — either static JSX or a render function `({ onClose }) => JSX`
+- `activator` — optional element that opens the form on click
+- `alwaysInline` — render inline instead of as a dialog
+- `alwaysOpen` — render children unconditionally (no dialog wrapper)
 
 ## Confirm dialog
 
