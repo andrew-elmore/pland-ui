@@ -21,7 +21,7 @@ const StepBlock = ({ step, top, actualHeight, hasAbove, hasBelow, isHovered, onH
                 left: 4,
                 right: 4,
                 height,
-                borderRadius: '6px',
+                borderRadius: 0,
                 border: '1px solid',
                 zIndex: isHovered ? 2 : 1,
                 borderColor: isHovered ? 'primary.main' : 'divider',

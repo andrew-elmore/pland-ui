@@ -11,18 +11,21 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import StepBlock from '../../features/itinerary/StepBlock';
+import TimelineTrack from '../../features/itinerary/TimelineTrack';
 import ItineraryForm from '../../features/itinerary/ItineraryDialog';
 import Form from '../../components/common/Form';
+import TimeForm from '../../components/common/TimeFormDialog';
 import { actions as itineraryActions, selectors as itinerarySelectors } from '../../store/itinerary';
 import { actions as stepActions, selectors as stepSelectors } from '../../store/step';
 import { actions as participantActions, selectors as participantSelectors } from '../../store/participant';
 import { actions as locationActions } from '../../store/location';
+import { actions as timeActions, selectors as timeSelectors } from '../../store/time';
 import { actions as uiActions } from '../../store/ui';
 import Itinerary from '../../domain/Itinerary';
 import ROUTES from '../../router/routes';
 
 const HOUR_HEIGHT = 80;
-const TIME_COL_WIDTH = 56;
+const TIME_COL_WIDTH = 100;
 
 const PlanItinerariesScreen = () => {
     const { planId } = useParams();
@@ -35,15 +38,19 @@ const PlanItinerariesScreen = () => {
 
     const steps = useSelector(stepSelectors.list);
     const participants = useSelector(participantSelectors.list);
+    const times = useSelector(timeSelectors.list);
+    const timeMutating = useSelector(timeSelectors.isMutating);
     const [selectedTab, setSelectedTab] = useState(0);
     const [working, setWorking] = useState(() => new Itinerary());
     const [hoveredStepId, setHoveredStepId] = useState(null);
+    const [editingTime, setEditingTime] = useState(null);
 
     useEffect(() => {
         if (planId) {
             dispatch(itineraryActions.list(planId));
             dispatch(participantActions.list(planId));
             dispatch(locationActions.list(planId));
+            dispatch(timeActions.list(planId));
         }
     }, [dispatch, planId]);
 
@@ -100,6 +107,16 @@ const PlanItinerariesScreen = () => {
         return markers;
     }, [rangeStart, totalHours]);
 
+    const stepTimes = useMemo(() => {
+        const timeIds = new Set();
+        for (const step of steps) {
+            if (step.startTimeId) timeIds.add(step.startTimeId);
+            if (step.endTimeId) timeIds.add(step.endTimeId);
+        }
+        const timeList = [...times];
+        return [...timeIds].map(id => timeList.find(t => t.id === id)).filter(Boolean);
+    }, [steps, times]);
+
     const handleTabChange = (_, newValue) => {
         if (newValue === itineraries.length) {
             setWorking(new Itinerary());
@@ -122,6 +139,34 @@ const PlanItinerariesScreen = () => {
     const handleViewStep = (step) => {
         if (!selectedItinerary?.id) return;
         navigate(ROUTES.STEP_DETAILS.replace(':planId', planId).replace(':itineraryId', selectedItinerary.id).replace(':stepId', step.id));
+    };
+
+    const handleEditTime = (time) => {
+        setEditingTime(time);
+        dispatch(uiActions.openDialog(`time-${time.id}`));
+    };
+
+    const handleTimeUpdate = (timeId, data) => {
+        console.log(':~: handleTimeUpdate', JSON.stringify({ timeId, data }));
+        dispatch(timeActions.update(timeId, data)).then((result) => {
+            console.log(':~: time update fulfilled', JSON.stringify(result));
+            dispatch(timeActions.list(planId));
+            if (selectedItinerary?.id) {
+                dispatch(stepActions.list(selectedItinerary.id));
+            }
+        }).catch((err) => {
+            console.error(':~: time update rejected', JSON.stringify(err, Object.getOwnPropertyNames(err)));
+        });
+    };
+
+    const handleSubmitTime = (data) => {
+        if (!editingTime) return;
+        dispatch(timeActions.update(editingTime.id, data)).then(() => {
+            dispatch(timeActions.list(planId));
+            if (selectedItinerary?.id) {
+                dispatch(stepActions.list(selectedItinerary.id));
+            }
+        });
     };
 
     if (itinLoading && !itinLoaded) {
@@ -185,13 +230,15 @@ const PlanItinerariesScreen = () => {
                 <Box sx={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
                     <Box sx={{ display: 'flex', minWidth: TIME_COL_WIDTH + participantList.length * 180 }}>
                         <Box sx={{ width: TIME_COL_WIDTH, flexShrink: 0, pt: '36px' }}>
-                            <Box sx={{ position: 'relative', height: totalHeight }}>
-                                {hourMarkers.map((m, i) => (
-                                    <Typography key={i} variant="caption" sx={{ position: 'absolute', top: m.y - 8, right: 8, color: 'text.secondary', fontSize: '0.65rem', userSelect: 'none' }}>
-                                        {m.label}
-                                    </Typography>
-                                ))}
-                            </Box>
+                            <TimelineTrack
+                                times={stepTimes}
+                                timeToY={timeToY}
+                                totalHeight={totalHeight}
+                                rangeStart={rangeStart}
+                                rangeEnd={rangeEnd}
+                                onEditTime={handleEditTime}
+                                onTimeUpdate={handleTimeUpdate}
+                            />
                         </Box>
 
                         {participantList.map((p) => {
@@ -241,6 +288,25 @@ const PlanItinerariesScreen = () => {
             )}
 
             {itineraryForm}
+
+            <Form
+                formType="time"
+                formData={editingTime}
+                title="Edit Time"
+                maxWidth="xs"
+                onClose={() => setEditingTime(null)}
+            >
+                {({ onClose }) => (
+                    <TimeForm
+                        onClose={onClose}
+                        planId={planId}
+                        times={times}
+                        editingTime={editingTime}
+                        onSubmit={handleSubmitTime}
+                        isSaving={timeMutating}
+                    />
+                )}
+            </Form>
         </Box>
     );
 };
