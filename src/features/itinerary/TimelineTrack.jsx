@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Box, Typography } from '@mui/material';
+import formatTime from '../../utils/formatTime';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
@@ -133,9 +134,7 @@ const TimelineTrack = ({ times, timeToY, totalHeight, rangeStart, rangeEnd, onEd
         }
     };
 
-    const formatTimestamp = (ts) => {
-        return new Date(ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-    };
+    const formatTimestamp = (ts) => formatTime(ts);
 
     const sortedTimes = [...times]
         .filter(t => t.datetime)

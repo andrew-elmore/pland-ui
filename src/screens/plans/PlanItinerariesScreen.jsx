@@ -23,6 +23,7 @@ import { actions as timeActions, selectors as timeSelectors } from '../../store/
 import { actions as uiActions } from '../../store/ui';
 import Itinerary from '../../domain/Itinerary';
 import ROUTES from '../../router/routes';
+import formatTime from '../../utils/formatTime';
 
 const HOUR_HEIGHT = 80;
 const TIME_COL_WIDTH = 100;
@@ -101,7 +102,7 @@ const PlanItinerariesScreen = () => {
             const time = new Date(rangeStart + i * 60 * 60 * 1000);
             markers.push({
                 y: i * HOUR_HEIGHT,
-                label: time.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+                label: formatTime(time),
             });
         }
         return markers;

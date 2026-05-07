@@ -20,13 +20,40 @@ const RouteDisplay = ({ route }) => {
     const last = steps[steps.length - 1];
 
     const stepTimes = useMemo(() => {
-        if (!route.departureTime || !steps.length) return [];
-        let currentTime = new Date(route.departureTime).getTime();
-        return steps.map((step) => {
-            const startTime = new Date(currentTime);
-            currentTime += step.durationSeconds * 1000;
-            return { startTime, endTime: new Date(currentTime) };
-        });
+        if (!steps.length) return [];
+        const result = new Array(steps.length);
+        for (let i = 0; i < steps.length; i++) {
+            const td = steps[i].transitDetails;
+            if (steps[i].travelMode === 'TRANSIT' && td?.departureTime && td?.arrivalTime) {
+                result[i] = { startTime: new Date(td.departureTime), endTime: new Date(td.arrivalTime) };
+            }
+        }
+        for (let i = 0; i < steps.length; i++) {
+            if (result[i]) continue;
+            const ms = steps[i].durationSeconds * 1000;
+            const prev = i > 0 ? result[i - 1] : null;
+            if (prev) {
+                const s = prev.endTime;
+                result[i] = { startTime: s, endTime: new Date(s.getTime() + ms) };
+            }
+        }
+        for (let i = steps.length - 1; i >= 0; i--) {
+            if (result[i]) continue;
+            const ms = steps[i].durationSeconds * 1000;
+            const next = i < steps.length - 1 ? result[i + 1] : null;
+            if (next) {
+                const e = next.startTime;
+                result[i] = { startTime: new Date(e.getTime() - ms), endTime: e };
+            }
+        }
+        for (let i = 0; i < steps.length; i++) {
+            if (result[i]) continue;
+            const ms = steps[i].durationSeconds * 1000;
+            const prev = i > 0 ? result[i - 1] : null;
+            const s = prev ? prev.endTime : route.departureTime ? new Date(route.departureTime) : new Date();
+            result[i] = { startTime: s, endTime: new Date(s.getTime() + ms) };
+        }
+        return result;
     }, [route.departureTime, steps]);
 
     const center = first

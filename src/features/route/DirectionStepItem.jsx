@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Typography, ListItem } from '@mui/material';
 import DirectionsWalkIcon from '@mui/icons-material/DirectionsWalk';
 import formatTime from '../../utils/formatTime';
+import formatDistance from '../../utils/formatDistance';
 import { WALK_COLOR } from './routeColors';
 
 const DirectionStepItem = ({ step, index, times, fare }) => {
@@ -13,12 +14,7 @@ const DirectionStepItem = ({ step, index, times, fare }) => {
         ? `Take ${td.lineShortName || td.lineName} from ${td.departureStop} to ${td.arrivalStop}`
         : step.htmlInstructions;
 
-    const distanceDisplay = (() => {
-        if (!step.distanceMeters) return '';
-        const miles = step.distanceMeters * 0.000621371;
-        if (miles >= 0.1) return `${miles.toFixed(1)} mi`;
-        return `${Math.round(step.distanceMeters * 3.28084)} ft`;
-    })();
+    const distanceDisplay = step.distanceDisplay ?? formatDistance(step.distanceMeters);
 
     return (
         <ListItem sx={{ py: 0.5, px: 0, alignItems: 'flex-start' }}>

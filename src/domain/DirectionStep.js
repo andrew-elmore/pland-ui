@@ -1,4 +1,5 @@
 import BasicDomain from './BasicDomain';
+import formatDistance from '../utils/formatDistance';
 
 export default class DirectionStep extends BasicDomain {
 
@@ -27,10 +28,7 @@ export default class DirectionStep extends BasicDomain {
     }
 
     get distanceDisplay() {
-        if (!this.distanceMeters) return '';
-        const miles = this.distanceMeters * 0.000621371;
-        if (miles >= 0.1) return `${miles.toFixed(1)} mi`;
-        return `${Math.round(this.distanceMeters * 3.28084)} ft`;
+        return formatDistance(this.distanceMeters);
     }
 
     toString = () => this.htmlInstructions || 'Step';

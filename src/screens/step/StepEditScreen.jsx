@@ -17,16 +17,18 @@ import { actions as groupActions, selectors as groupSelectors } from '../../stor
 import { actions as locationActions, selectors as locationSelectors } from '../../store/location';
 import { actions as timeActions, selectors as timeSelectors } from '../../store/time';
 import useMutateEffect from '../../hooks/useMutateEffect';
+import useTimeEditor from '../../hooks/useTimeEditor';
 import ROUTES from '../../router/routes';
 import Route from '../../domain/Route';
+import Step from '../../domain/Step';
 import * as routeService from '../../services/route';
 import TimeForm from '../../components/common/TimeFormDialog';
 import Form from '../../components/common/Form';
-import { actions as uiActions } from '../../store/ui';
 import ParticipantPicker from '../../features/step/ParticipantPicker';
 import TimeSelector from '../../features/step/TimeSelector';
 import RouteForm from '../../features/step/RouteForm';
 import LocationPicker from '../../features/step/LocationPicker';
+import { hmToSeconds, secondsToHM } from '../../utils/duration';
 
 const StepEditScreen = () => {
     const { planId, stepId } = useParams();
@@ -40,14 +42,15 @@ const StepEditScreen = () => {
     const groups = useSelector(groupSelectors.list);
     const locations = useSelector(locationSelectors.list);
     const times = useSelector(timeSelectors.list);
-    const timeMutating = useSelector(timeSelectors.isMutating);
 
-    const [stepName, setStepName] = useState('');
-    const [stepStartTimeId, setStepStartTimeId] = useState(null);
-    const [stepEndTimeId, setStepEndTimeId] = useState(null);
-    const [stepParticipantIds, setStepParticipantIds] = useState([]);
-    const [stepLocationId, setStepLocationId] = useState(null);
+    const [working, setWorking] = useState(() => new Step());
     const [initialized, setInitialized] = useState(false);
+
+    const { editingTime, timeMutating, handleEditTime, handleSubmitTime, clearEditingTime } = useTimeEditor(times, planId);
+
+    const handleChange = (field, value) => {
+        setWorking(prev => prev.clone().set(field, value));
+    };
 
     const [isRouteStep, setIsRouteStep] = useState(false);
     const [originLocationId, setOriginLocationId] = useState(null);
@@ -61,7 +64,6 @@ const StepEditScreen = () => {
     const [routeOptions, setRouteOptions] = useState([]);
     const [selectedRouteIdx, setSelectedRouteIdx] = useState(null);
     const [previewLoading, setPreviewLoading] = useState(false);
-    const [editingTime, setEditingTime] = useState(null);
 
     useEffect(() => {
         if (planId) {
@@ -80,11 +82,13 @@ const StepEditScreen = () => {
 
     useEffect(() => {
         if (step?.id && step.id === stepId && !initialized) {
-            setStepName(step.name);
-            setStepStartTimeId(step.startTimeId ?? null);
-            setStepEndTimeId(step.endTimeId ?? null);
-            setStepParticipantIds(step.participantIds ?? []);
-            setStepLocationId(step.locationId ?? null);
+            setWorking(new Step({
+                name: step.name,
+                startTimeId: step.startTimeId,
+                endTimeId: step.endTimeId,
+                participantIds: step.participantIds ?? [],
+                locationId: step.locationId,
+            }));
             if (step.isRouteStep && step.route) {
                 setIsRouteStep(true);
                 setOriginLocationId(step.route.originLocationId);
@@ -96,11 +100,9 @@ const StepEditScreen = () => {
                 const computedTimeId = step.route.timeMode === Route.TIME_MODE_DEPART_AT ? step.endTimeId : step.startTimeId;
                 const computedTime = [...times].find(t => t.id === computedTimeId);
                 if (computedTime?.offsetSeconds) {
-                    const abs = Math.abs(computedTime.offsetSeconds);
-                    const h = Math.floor(abs / 3600);
-                    const m = Math.round((abs % 3600) / 60);
-                    setPaddingHours(h > 0 ? String(h) : '');
-                    setPaddingMinutes(m > 0 ? String(m) : '');
+                    const { hours, minutes } = secondsToHM(computedTime.offsetSeconds);
+                    setPaddingHours(hours > 0 ? String(hours) : '');
+                    setPaddingMinutes(minutes > 0 ? String(minutes) : '');
                 }
             }
             setInitialized(true);
@@ -121,32 +123,32 @@ const StepEditScreen = () => {
     });
 
     const handleSubmit = () => {
-        if (!stepName.trim()) return;
+        if (!working.name.trim()) return;
 
         if (isRouteStep) {
             if (!originLocationId || !destinationLocationId || !routeTimeId) return;
             if (routeOptions.length > 0 && selectedRouteIdx === null) return;
             const payload = {
-                name: stepName.trim(),
-                participantIds: stepParticipantIds,
+                name: working.name.trim(),
+                participantIds: working.participantIds,
                 originLocationId,
                 destinationLocationId,
                 travelMode,
                 transitModes,
                 timeId: routeTimeId,
                 timeMode,
-                paddingSeconds: (parseInt(paddingHours, 10) || 0) * 3600 + (parseInt(paddingMinutes, 10) || 0) * 60,
+                paddingSeconds: hmToSeconds(paddingHours, paddingMinutes),
             };
             if (selectedRouteIdx !== null) payload.routeData = routeOptions[selectedRouteIdx];
             submit(stepActions.update(stepId, payload));
         } else {
-            if (!stepStartTimeId || !stepEndTimeId) return;
+            if (!working.startTimeId || !working.endTimeId) return;
             submit(stepActions.update(stepId, {
-                name: stepName.trim(),
-                startTimeId: stepStartTimeId,
-                endTimeId: stepEndTimeId,
-                participantIds: stepParticipantIds,
-                locationId: stepLocationId,
+                name: working.name.trim(),
+                startTimeId: working.startTimeId,
+                endTimeId: working.endTimeId,
+                participantIds: working.participantIds,
+                locationId: working.locationId,
             }));
         }
     };
@@ -162,10 +164,10 @@ const StepEditScreen = () => {
 
     const handleToggleRoute = () => {
         if (!isRouteStep) {
-            setOriginLocationId(stepLocationId);
-            setStepLocationId(null);
+            setOriginLocationId(working.locationId);
+            handleChange('locationId', null);
         } else {
-            setStepLocationId(originLocationId);
+            handleChange('locationId', originLocationId);
             setOriginLocationId(null);
             setDestinationLocationId(null);
             setTransitModes([]);
@@ -198,20 +200,6 @@ const StepEditScreen = () => {
         setPreviewLoading(false);
     };
 
-    const handleEditTime = (timeId) => {
-        const time = [...times].find(t => t.id === timeId);
-        if (time) {
-            setEditingTime(time);
-            dispatch(uiActions.openDialog(`time-${time.id}`));
-        }
-    };
-
-    const handleSubmitTime = (data) => {
-        if (editingTime) {
-            dispatch(timeActions.update(editingTime.id, data));
-        }
-    };
-
     if (isLoading && !isLoaded) {
         return null;
     }
@@ -228,9 +216,9 @@ const StepEditScreen = () => {
     const locationList = [...locations];
 
     const isSubmitDisabled = isMutating
-        || !stepName.trim()
-        || stepParticipantIds.length === 0
-        || (isRouteStep ? (!originLocationId || !destinationLocationId || !routeTimeId || (routeOptions.length > 0 && selectedRouteIdx === null)) : (!stepStartTimeId || !stepEndTimeId));
+        || !working.name.trim()
+        || working.participantIds.length === 0
+        || (isRouteStep ? (!originLocationId || !destinationLocationId || !routeTimeId || (routeOptions.length > 0 && selectedRouteIdx === null)) : (!working.startTimeId || !working.endTimeId));
 
     return (
         <Container maxWidth={false}>
@@ -252,14 +240,14 @@ const StepEditScreen = () => {
                     autoFocus
                     label="Name"
                     fullWidth
-                    value={stepName}
-                    onChange={(e) => setStepName(e.target.value)}
+                    value={working.name}
+                    onChange={(e) => handleChange('name', e.target.value)}
                     size="small"
                 />
 
                 <ParticipantPicker
-                    participantIds={stepParticipantIds}
-                    onChange={setStepParticipantIds}
+                    participantIds={working.participantIds}
+                    onChange={(ids) => handleChange('participantIds', ids)}
                     participants={participants}
                     groups={groups}
                     planId={planId}
@@ -299,8 +287,8 @@ const StepEditScreen = () => {
                 ) : (
                     <>
                         <LocationPicker
-                            value={stepLocationId}
-                            onChange={setStepLocationId}
+                            value={working.locationId}
+                            onChange={(id) => handleChange('locationId', id)}
                             locationList={locationList}
                             label="Location (optional)"
                             planId={planId}
@@ -318,8 +306,8 @@ const StepEditScreen = () => {
                         </Box>
 
                         <TimeSelector
-                            value={stepStartTimeId}
-                            onChange={setStepStartTimeId}
+                            value={working.startTimeId}
+                            onChange={(id) => handleChange('startTimeId', id)}
                             onEdit={handleEditTime}
                             timeList={timeList}
                             label="Start Time"
@@ -327,8 +315,8 @@ const StepEditScreen = () => {
                         />
 
                         <TimeSelector
-                            value={stepEndTimeId}
-                            onChange={setStepEndTimeId}
+                            value={working.endTimeId}
+                            onChange={(id) => handleChange('endTimeId', id)}
                             onEdit={handleEditTime}
                             timeList={timeList}
                             label="End Time"
@@ -363,7 +351,7 @@ const StepEditScreen = () => {
                 formData={editingTime}
                 title="Edit Time"
                 maxWidth="xs"
-                onClose={() => setEditingTime(null)}
+                onClose={clearEditingTime}
             >
                 {({ onClose }) => (
                     <TimeForm

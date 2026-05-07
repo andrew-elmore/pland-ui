@@ -1,4 +1,5 @@
 import BasicDomain from './BasicDomain';
+import { secondsToHM } from '../utils/duration';
 
 export default class Time extends BasicDomain {
 
@@ -39,18 +40,14 @@ export default class Time extends BasicDomain {
     get offsetDisplay() {
         if (this.routeId) {
             if (!this.offsetSeconds) return 'via route';
-            const abs = Math.abs(this.offsetSeconds);
-            const h = Math.floor(abs / 3600);
-            const m = Math.round((abs % 3600) / 60);
+            const { hours: h, minutes: m } = secondsToHM(this.offsetSeconds);
             const parts = [];
             if (h) parts.push(`${h}h`);
             if (m) parts.push(`${m}m`);
             return `via route + ${parts.join(' ')}`;
         }
         if (!this.offsetSeconds) return '';
-        const abs = Math.abs(this.offsetSeconds);
-        const h = Math.floor(abs / 3600);
-        const m = Math.round((abs % 3600) / 60);
+        const { hours: h, minutes: m } = secondsToHM(this.offsetSeconds);
         const sign = this.offsetSeconds >= 0 ? '+' : '-';
         if (h && m) return `${sign}${h}h ${m}m`;
         if (h) return `${sign}${h}h`;

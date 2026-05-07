@@ -10,6 +10,7 @@ import {
     ToggleButton,
 } from '@mui/material';
 import SubdirectoryArrowRightIcon from '@mui/icons-material/SubdirectoryArrowRight';
+import { hmToSeconds, secondsToHM } from '../../utils/duration';
 
 const buildParentTree = (items) => {
     const ordered = [];
@@ -68,23 +69,20 @@ const TimeForm = ({
     });
     const [offsetHours, setOffsetHours] = useState(() => {
         if (editingTime && (editingTime.routeId || editingTime.parentTimeId)) {
-            const abs = Math.abs(editingTime.offsetSeconds || 0);
-            return String(Math.floor(abs / 3600) || '');
+            return String(secondsToHM(editingTime.offsetSeconds).hours || '');
         }
         return '';
     });
     const [offsetMinutes, setOffsetMinutes] = useState(() => {
         if (editingTime && (editingTime.routeId || editingTime.parentTimeId)) {
-            const abs = Math.abs(editingTime.offsetSeconds || 0);
-            return String(Math.round((abs % 3600) / 60) || '');
+            return String(secondsToHM(editingTime.offsetSeconds).minutes || '');
         }
         return '';
     });
 
     const handleSave = () => {
         if (isEditingRouteDependent) {
-            const offsetSeconds = (parseInt(offsetHours, 10) || 0) * 3600 + (parseInt(offsetMinutes, 10) || 0) * 60;
-            onSubmit({ label: label.trim(), offsetSeconds });
+            onSubmit({ label: label.trim(), offsetSeconds: hmToSeconds(offsetHours, offsetMinutes) });
             onClose();
             return;
         }
@@ -93,7 +91,7 @@ const TimeForm = ({
         if (!isDependent && !datetime) return;
 
         const offsetSeconds = isDependent
-            ? offsetSign * ((parseInt(offsetHours, 10) || 0) * 3600 + (parseInt(offsetMinutes, 10) || 0) * 60)
+            ? offsetSign * hmToSeconds(offsetHours, offsetMinutes)
             : 0;
 
         const data = {

@@ -43,16 +43,16 @@ const StepDetailsScreen = () => {
     }, [dispatch, planId]);
 
     useEffect(() => {
-        if (stepId && (!step || step.id !== stepId)) {
+        if (stepId) {
             dispatch(stepActions.get(stepId));
         }
-    }, [dispatch, stepId, step?.id]);
+    }, [dispatch, stepId]);
 
     useEffect(() => {
-        if (step?.routeId && route?.id !== step.routeId) {
+        if (step?.routeId) {
             dispatch(routeActions.get(step.routeId));
         }
-    }, [dispatch, step?.routeId, route?.id]);
+    }, [dispatch, step?.routeId]);
 
     if (isLoading && !isLoaded) {
         return (
