@@ -233,6 +233,7 @@ const PlanItinerariesScreen = () => {
                         <Box sx={{ width: TIME_COL_WIDTH, flexShrink: 0, pt: '36px' }}>
                             <TimelineTrack
                                 times={stepTimes}
+                                steps={[...steps]}
                                 timeToY={timeToY}
                                 totalHeight={totalHeight}
                                 rangeStart={rangeStart}

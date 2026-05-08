@@ -17,7 +17,37 @@ const getTimeIcon = (time) => {
     return AccessTimeIcon;
 };
 
-const TimelineTrack = ({ times, timeToY, totalHeight, rangeStart, rangeEnd, onEditTime, onTimeUpdate }) => {
+const getRouteEndMs = (dirSteps) => {
+    let lastTransitEnd = null;
+    let lastTransitIdx = -1;
+    for (let i = 0; i < dirSteps.length; i++) {
+        if (dirSteps[i].travelMode === 'TRANSIT' && dirSteps[i].transitDetails?.arrivalTime) {
+            lastTransitEnd = new Date(dirSteps[i].transitDetails.arrivalTime).getTime();
+            lastTransitIdx = i;
+        }
+    }
+    if (lastTransitEnd == null) return null;
+    let endMs = lastTransitEnd;
+    for (let i = lastTransitIdx + 1; i < dirSteps.length; i++) {
+        endMs += (dirSteps[i].durationSeconds || 0) * 1000;
+    }
+    return endMs;
+};
+
+const getRouteStartMs = (dirSteps) => {
+    for (let i = 0; i < dirSteps.length; i++) {
+        if (dirSteps[i].travelMode === 'TRANSIT' && dirSteps[i].transitDetails?.departureTime) {
+            let startMs = new Date(dirSteps[i].transitDetails.departureTime).getTime();
+            for (let j = i - 1; j >= 0; j--) {
+                startMs -= (dirSteps[j].durationSeconds || 0) * 1000;
+            }
+            return startMs;
+        }
+    }
+    return null;
+};
+
+const TimelineTrack = ({ times, steps, timeToY, totalHeight, rangeStart, rangeEnd, onEditTime, onTimeUpdate }) => {
     const trackRef = useRef(null);
     const dragRef = useRef(null);
     const [dragState, setDragState] = useState(null);
@@ -31,16 +61,34 @@ const TimelineTrack = ({ times, timeToY, totalHeight, rangeStart, rangeEnd, onEd
 
         let minY = 0;
         let maxY = totalHeight;
+        let minOffset = 0;
         const timeMs = new Date(time.datetime).getTime();
         const bufferMs = (time.offsetSeconds || 0) * 1000;
 
         if (time.isRouteDependent) {
             const parentTime = times.find(t => t.id === time.parentTimeId);
             const isBefore = parentTime && timeMs < new Date(parentTime.datetime).getTime();
+            const step = steps.find(s => s.routeId === time.routeId);
+            const dirSteps = step?.route?.steps;
+
             if (isBefore) {
-                maxY = timeToY(new Date(timeMs + bufferMs));
+                const routeStartMs = dirSteps?.length ? getRouteStartMs(dirSteps) : null;
+                if (routeStartMs != null) {
+                    maxY = timeToY(new Date(routeStartMs));
+                    const parentMs = new Date(parentTime.datetime).getTime();
+                    minOffset = Math.max(0, (parentMs - routeStartMs) / 1000 - (step.route?.durationSeconds || 0));
+                } else {
+                    maxY = timeToY(new Date(timeMs + bufferMs));
+                }
             } else {
-                minY = timeToY(new Date(timeMs - bufferMs));
+                const routeEndMs = dirSteps?.length ? getRouteEndMs(dirSteps) : null;
+                if (routeEndMs != null) {
+                    minY = timeToY(new Date(routeEndMs));
+                    const parentMs = new Date(parentTime.datetime).getTime();
+                    minOffset = Math.max(0, (routeEndMs - parentMs) / 1000 - (step.route?.durationSeconds || 0));
+                } else {
+                    minY = timeToY(new Date(timeMs - bufferMs));
+                }
             }
         } else if (time.isDependent && time.parentTimeId) {
             const parentTime = times.find(t => t.id === time.parentTimeId);
@@ -54,7 +102,7 @@ const TimelineTrack = ({ times, timeToY, totalHeight, rangeStart, rangeEnd, onEd
             }
         }
 
-        dragRef.current = { timeId: time.id, startY: y, currentY: y, time, minY, maxY };
+        dragRef.current = { timeId: time.id, startY: y, currentY: y, time, minY, maxY, minOffset };
         setDragState({ timeId: time.id, currentY: y });
     };
 
@@ -73,7 +121,7 @@ const TimelineTrack = ({ times, timeToY, totalHeight, rangeStart, rangeEnd, onEd
         dragRef.current = null;
         setDragState(null);
 
-        const { time, startY, currentY } = drag;
+        const { time, startY, currentY, minOffset } = drag;
         const deltaY = currentY - startY;
         const deltaMs = (deltaY / totalHeight) * (rangeEnd - rangeStart);
 
@@ -101,9 +149,10 @@ const TimelineTrack = ({ times, timeToY, totalHeight, rangeStart, rangeEnd, onEd
             const parentTime = times.find(t => t.id === time.parentTimeId);
             const isBefore = parentTime && new Date(time.datetime) < new Date(parentTime.datetime);
             const adjustedDelta = isBefore ? -deltaSeconds : deltaSeconds;
-            const newOffset = Math.max(0, (time.offsetSeconds || 0) + adjustedDelta);
-            const snapped = Math.round(newOffset / SNAP_SECONDS) * SNAP_SECONDS;
-            console.log(':~: route-dependent update', JSON.stringify({ isBefore, oldOffset: time.offsetSeconds, adjustedDelta, newOffset, snapped }));
+            const floor = Math.ceil((minOffset || 0) / SNAP_SECONDS) * SNAP_SECONDS;
+            const newOffset = Math.max(floor, (time.offsetSeconds || 0) + adjustedDelta);
+            const snapped = Math.max(floor, Math.round(newOffset / SNAP_SECONDS) * SNAP_SECONDS);
+            console.log(':~: route-dependent update', JSON.stringify({ isBefore, oldOffset: time.offsetSeconds, adjustedDelta, minOffset, floor, newOffset, snapped }));
             if (snapped !== (time.offsetSeconds || 0)) {
                 onTimeUpdate(time.id, { offsetSeconds: snapped, parentTimeId: time.parentTimeId, routeId: time.routeId });
             } else {
