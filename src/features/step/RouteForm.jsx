@@ -28,9 +28,10 @@ const RouteForm = ({
     onRemoveDestination,
     locationList, timeList, onEditTime,
     planId, departureTime,
+    travelTimeMode = false,
 }) => (
     <>
-        {showOrigin && (
+        {!travelTimeMode && showOrigin && (
             <LocationPicker
                 value={originLocationId}
                 onChange={onOriginChange}
@@ -40,13 +41,15 @@ const RouteForm = ({
             />
         )}
 
-        <LocationPicker
-            value={destinationLocationId}
-            onChange={onDestinationChange}
-            locationList={locationList}
-            label="Destination"
-            planId={planId}
-        />
+        {!travelTimeMode && (
+            <LocationPicker
+                value={destinationLocationId}
+                onChange={onDestinationChange}
+                locationList={locationList}
+                label="Destination"
+                planId={planId}
+            />
+        )}
 
         <Box sx={{ mt: 2 }}>
             <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
@@ -85,30 +88,34 @@ const RouteForm = ({
             </Box>
         )}
 
-        <Box sx={{ mt: 2 }}>
-            <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
-                Time Mode
-            </Typography>
-            <ToggleButtonGroup
-                value={timeMode}
-                exclusive
-                onChange={(_, value) => { if (value) onTimeModeChange(value); }}
-                size="small"
-                fullWidth
-            >
-                <ToggleButton value="depart_at" sx={{ textTransform: 'none', fontWeight: 600 }}>Leave At</ToggleButton>
-                <ToggleButton value="arrive_by" sx={{ textTransform: 'none', fontWeight: 600 }}>Arrive By</ToggleButton>
-            </ToggleButtonGroup>
-        </Box>
+        {!travelTimeMode && (
+            <Box sx={{ mt: 2 }}>
+                <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
+                    Time Mode
+                </Typography>
+                <ToggleButtonGroup
+                    value={timeMode}
+                    exclusive
+                    onChange={(_, value) => { if (value) onTimeModeChange(value); }}
+                    size="small"
+                    fullWidth
+                >
+                    <ToggleButton value="depart_at" sx={{ textTransform: 'none', fontWeight: 600 }}>Leave At</ToggleButton>
+                    <ToggleButton value="arrive_by" sx={{ textTransform: 'none', fontWeight: 600 }}>Arrive By</ToggleButton>
+                </ToggleButtonGroup>
+            </Box>
+        )}
 
-        <TimeSelector
-            value={routeTimeId}
-            onChange={onRouteTimeChange}
-            onEdit={onEditTime}
-            timeList={timeList}
-            label={timeMode === 'depart_at' ? 'Departure Time' : 'Arrival Time'}
-            planId={planId}
-        />
+        {!travelTimeMode && (
+            <TimeSelector
+                value={routeTimeId}
+                onChange={onRouteTimeChange}
+                onEdit={onEditTime}
+                timeList={timeList}
+                label={timeMode === 'depart_at' ? 'Departure Time' : 'Arrival Time'}
+                planId={planId}
+            />
+        )}
 
         <Box sx={{ display: 'flex', gap: 1, mt: 2, alignItems: 'center' }}>
             <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>Padding</Typography>
@@ -141,11 +148,13 @@ const RouteForm = ({
             </Box>
         )}
 
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
-            <Button size="small" color="error" onClick={onRemoveDestination} sx={{ textTransform: 'none', fontSize: '0.75rem' }}>
-                Remove Destination
-            </Button>
-        </Box>
+        {!travelTimeMode && (
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+                <Button size="small" color="error" onClick={onRemoveDestination} sx={{ textTransform: 'none', fontSize: '0.75rem' }}>
+                    Remove Destination
+                </Button>
+            </Box>
+        )}
     </>
 );
 

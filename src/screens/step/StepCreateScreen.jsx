@@ -10,6 +10,8 @@ import {
     ToggleButtonGroup,
     ToggleButton,
     Alert,
+    FormControlLabel,
+    Switch,
 } from '@mui/material';
 import DirectionsIcon from '@mui/icons-material/Directions';
 import { actions as stepActions, selectors as stepSelectors } from '../../store/step';
@@ -51,8 +53,10 @@ const StepCreateScreen = () => {
         return ids ? ids.split(',') : [];
     });
     const [stepLocationId, setStepLocationId] = useState(searchParams.get('locationId') || null);
+    const originalLocationId = searchParams.get('locationId') || null;
 
     const [isRouteStep, setIsRouteStep] = useState(false);
+    const [includeTravelTime, setIncludeTravelTime] = useState(false);
     const [destinationLocationId, setDestinationLocationId] = useState(null);
     const [travelMode, setTravelMode] = useState(Route.TRAVEL_MODE_DRIVE);
     const [transitModes, setTransitModes] = useState([]);
@@ -86,6 +90,20 @@ const StepCreateScreen = () => {
         }
     }, [dispatch, planId]);
 
+    useEffect(() => {
+        if (includeTravelTime && originalLocationId && stepLocationId === originalLocationId) {
+            setIncludeTravelTime(false);
+            setRouteOptions([]);
+            setSelectedRouteIdx(null);
+            setTravelMode(Route.TRAVEL_MODE_DRIVE);
+            setTransitModes([]);
+            setPaddingHours('');
+            setPaddingMinutes('');
+            setRouteTimeId(null);
+            setTimeMode(Route.TIME_MODE_DEPART_AT);
+        }
+    }, [stepLocationId, originalLocationId, includeTravelTime]);
+
     const transitModesKey = transitModes.join(',');
     useEffect(() => {
         setRouteOptions([]);
@@ -101,7 +119,34 @@ const StepCreateScreen = () => {
     const handleSubmit = () => {
         if (!stepName.trim()) return;
 
-        if (isRouteStep) {
+        if (includeTravelTime) {
+            if (selectedRouteIdx === null) return;
+            const ds = (parseInt(durationHours, 10) || 0) * 3600 + (parseInt(durationMinutes, 10) || 0) * 60;
+            if (!ds) return;
+            const isAfter = hasStartParam;
+            submit(stepActions.createWithTravel({
+                itineraryId,
+                direction: isAfter ? 'after' : 'before',
+                routeStep: {
+                    originLocationId: isAfter ? originalLocationId : stepLocationId,
+                    destinationLocationId: isAfter ? stepLocationId : originalLocationId,
+                    travelMode,
+                    transitModes,
+                    timeId: isAfter ? stepStartTimeId : stepEndTimeId,
+                    timeMode: isAfter ? Route.TIME_MODE_DEPART_AT : Route.TIME_MODE_ARRIVE_BY,
+                    paddingSeconds: (parseInt(paddingHours, 10) || 0) * 3600 + (parseInt(paddingMinutes, 10) || 0) * 60,
+                    routeData: routeOptions[selectedRouteIdx],
+                    participantIds: stepParticipantIds,
+                },
+                normalStep: {
+                    name: stepName.trim(),
+                    locationId: stepLocationId,
+                    durationSeconds: ds,
+                    durationTimeLabel: derivedTimeLabel.trim() || undefined,
+                    participantIds: stepParticipantIds,
+                },
+            }));
+        } else if (isRouteStep) {
             if (!stepLocationId || !destinationLocationId || !routeTimeId || selectedRouteIdx === null) return;
             submit(stepActions.create({
                 itineraryId,
@@ -181,17 +226,50 @@ const StepCreateScreen = () => {
         }
     };
 
+    const handleTravelToggle = () => {
+        const turning = !includeTravelTime;
+        setIncludeTravelTime(turning);
+        setRouteOptions([]);
+        setSelectedRouteIdx(null);
+        setTransitModes([]);
+        setPaddingHours('');
+        setPaddingMinutes('');
+        if (turning) {
+            setTravelMode(Route.TRAVEL_MODE_DRIVE);
+            if (hasStartParam) {
+                setTimeMode(Route.TIME_MODE_DEPART_AT);
+                setRouteTimeId(stepStartTimeId);
+            } else {
+                setTimeMode(Route.TIME_MODE_ARRIVE_BY);
+                setRouteTimeId(stepEndTimeId);
+            }
+        } else {
+            setRouteTimeId(null);
+            setTimeMode(Route.TIME_MODE_DEPART_AT);
+        }
+    };
+
     const handlePreview = async () => {
-        if (!stepLocationId || !destinationLocationId || !routeTimeId) return;
+        let origin, destination, rTimeId;
+        if (includeTravelTime) {
+            origin = hasStartParam ? originalLocationId : stepLocationId;
+            destination = hasStartParam ? stepLocationId : originalLocationId;
+            rTimeId = hasStartParam ? stepStartTimeId : stepEndTimeId;
+        } else {
+            origin = stepLocationId;
+            destination = destinationLocationId;
+            rTimeId = routeTimeId;
+        }
+        if (!origin || !destination || !rTimeId) return;
         setPreviewLoading(true);
         try {
             const timeList = [...times];
             const routes = await routeService.preview({
-                originLocationId: stepLocationId,
-                destinationLocationId,
+                originLocationId: origin,
+                destinationLocationId: destination,
                 travelMode,
                 transitModes,
-                datetime: timeList.find(t => t.id === routeTimeId)?.datetime,
+                datetime: timeList.find(t => t.id === rTimeId)?.datetime,
                 timeMode,
             });
             setRouteOptions(routes);
@@ -220,13 +298,15 @@ const StepCreateScreen = () => {
     const locationList = [...locations];
 
     const hasDuration = (parseInt(durationHours, 10) || 0) > 0 || (parseInt(durationMinutes, 10) || 0) > 0;
-    const isTimeValid = isRouteStep
-        ? (stepLocationId && destinationLocationId && routeTimeId && selectedRouteIdx !== null)
-        : timeEntryMode === 'from-till'
-            ? (stepStartTimeId && stepEndTimeId)
-            : timeEntryMode === 'after'
-                ? (stepStartTimeId && hasDuration)
-                : (stepEndTimeId && hasDuration);
+    const isTimeValid = includeTravelTime
+        ? (selectedRouteIdx !== null && hasDuration)
+        : isRouteStep
+            ? (stepLocationId && destinationLocationId && routeTimeId && selectedRouteIdx !== null)
+            : timeEntryMode === 'from-till'
+                ? (stepStartTimeId && stepEndTimeId)
+                : timeEntryMode === 'after'
+                    ? (stepStartTimeId && hasDuration)
+                    : (stepEndTimeId && hasDuration);
     const isSubmitDisabled = isMutating || !stepName.trim() || stepParticipantIds.length === 0 || !isTimeValid;
 
     return (
@@ -262,7 +342,17 @@ const StepCreateScreen = () => {
                     label={isRouteStep ? 'Origin' : 'Location (optional)'}
                     planId={planId}
                 />
-                {!isRouteStep && (
+
+                {!isRouteStep && originalLocationId && (hasStartParam || hasEndParam) && stepLocationId && stepLocationId !== originalLocationId && (
+                    <FormControlLabel
+                        control={<Switch checked={includeTravelTime} onChange={handleTravelToggle} size="small" />}
+                        label="Include travel time"
+                        slotProps={{ typography: { variant: 'body2' } }}
+                        sx={{ mt: 1 }}
+                    />
+                )}
+
+                {!isRouteStep && !includeTravelTime && (
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
                         <Button
                             size="small"
@@ -308,7 +398,57 @@ const StepCreateScreen = () => {
                     />
                 )}
 
-                {!isRouteStep && (
+                {includeTravelTime && (
+                    <>
+                        <RouteForm
+                            travelTimeMode
+                            originLocationId={hasStartParam ? originalLocationId : stepLocationId}
+                            onOriginChange={() => {}}
+                            showOrigin={false}
+                            destinationLocationId={hasStartParam ? stepLocationId : originalLocationId}
+                            onDestinationChange={() => {}}
+                            travelMode={travelMode}
+                            onTravelModeChange={setTravelMode}
+                            transitModes={transitModes}
+                            onTransitModesChange={setTransitModes}
+                            timeMode={timeMode}
+                            onTimeModeChange={() => {}}
+                            routeTimeId={routeTimeId}
+                            onRouteTimeChange={() => {}}
+                            paddingHours={paddingHours}
+                            onPaddingHoursChange={setPaddingHours}
+                            paddingMinutes={paddingMinutes}
+                            onPaddingMinutesChange={setPaddingMinutes}
+                            routeOptions={routeOptions}
+                            selectedRouteIdx={selectedRouteIdx}
+                            onRouteSelect={setSelectedRouteIdx}
+                            previewLoading={previewLoading}
+                            onPreview={handlePreview}
+                            onRemoveDestination={() => {}}
+                            locationList={locationList}
+                            timeList={timeList}
+                            onEditTime={handleEditTime}
+                            planId={planId}
+                            departureTime={hasStartParam ? timeList.find(t => t.id === stepStartTimeId)?.datetime : undefined}
+                        />
+                        <Box sx={{ display: 'flex', gap: 1, mt: 2, alignItems: 'center' }}>
+                            <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>Step Duration</Typography>
+                            <TextField label="Hours" type="number" size="small" value={durationHours} onChange={(e) => setDurationHours(e.target.value)} slotProps={{ htmlInput: { min: 0 } }} sx={{ width: 80 }} />
+                            <TextField label="Min" type="number" size="small" value={durationMinutes} onChange={(e) => setDurationMinutes(e.target.value)} slotProps={{ htmlInput: { min: 0, max: 59 } }} sx={{ width: 80 }} />
+                        </Box>
+                        <TextField
+                            label={hasStartParam ? 'End Time Label (optional)' : 'Start Time Label (optional)'}
+                            fullWidth
+                            size="small"
+                            value={derivedTimeLabel}
+                            onChange={(e) => setDerivedTimeLabel(e.target.value)}
+                            placeholder={`${stepName || 'Event'} ${hasStartParam ? 'End' : 'Start'}`}
+                            sx={{ mt: 2 }}
+                        />
+                    </>
+                )}
+
+                {!isRouteStep && !includeTravelTime && (
                     <>
                         <Box sx={{ mt: 2 }}>
                             <ToggleButtonGroup

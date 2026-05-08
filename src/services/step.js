@@ -8,6 +8,8 @@ export const create = (data) => request('/steps', { method: 'POST', data });
 
 export const createWithDuration = (data) => request('/steps/create-with-duration', { method: 'POST', data });
 
+export const createWithTravel = (data) => request('/steps/create-with-travel', { method: 'POST', data });
+
 export const update = (id, data) => request(`/steps/${id}`, { method: 'PUT', data });
 
 export const remove = (id) => request(`/steps/${id}`, { method: 'DELETE' });

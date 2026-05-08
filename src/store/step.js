@@ -5,6 +5,7 @@ import { Step, StepArray } from '../domain';
 const LIST = 'LIST_STEPS';
 const GET = 'GET_STEP';
 const CREATE = 'CREATE_STEP';
+const CREATE_WITH_TRAVEL = 'CREATE_WITH_TRAVEL_STEP';
 const UPDATE = 'UPDATE_STEP';
 const DELETE = 'DELETE_STEP';
 
@@ -102,6 +103,7 @@ export function reducer(state = initialState, action) {
         };
     }
 
+    case `${CREATE_WITH_TRAVEL}_PENDING`:
     case `${CREATE}_PENDING`:
     case `${UPDATE}_PENDING`: {
         return {
@@ -149,6 +151,17 @@ export function reducer(state = initialState, action) {
         };
     }
 
+    case `${CREATE_WITH_TRAVEL}_FULFILLED`: {
+        return {
+            ...state,
+            current: {
+                ...state.current,
+                isMutating: false,
+            },
+        };
+    }
+
+    case `${CREATE_WITH_TRAVEL}_REJECTED`:
     case `${CREATE}_REJECTED`:
     case `${UPDATE}_REJECTED`: {
         return {
@@ -226,6 +239,12 @@ export const actions = {
         type: CREATE,
         meta: { data },
         payload: stepService.createWithDuration(data),
+    }),
+
+    createWithTravel: (data) => ({
+        type: CREATE_WITH_TRAVEL,
+        meta: { data },
+        payload: stepService.createWithTravel(data),
     }),
 
     update: (id, data) => ({
