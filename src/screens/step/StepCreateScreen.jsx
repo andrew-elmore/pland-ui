@@ -420,10 +420,10 @@ const StepCreateScreen = () => {
                             planId={planId}
                             departureTime={hasStartParam ? timeList.find(t => t.id === working.startTimeId)?.datetime : undefined}
                         />
-                        <Box sx={{ display: 'flex', gap: 1, mt: 2, alignItems: 'center' }}>
+                        <Box sx={{ display: 'flex', gap: 1, mt: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                             <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>Step Duration</Typography>
-                            <TextField label="Hours" type="number" size="small" value={durationHours} onChange={(e) => setDurationHours(e.target.value)} slotProps={{ htmlInput: { min: 0 } }} sx={{ width: 80 }} />
-                            <TextField label="Min" type="number" size="small" value={durationMinutes} onChange={(e) => setDurationMinutes(e.target.value)} slotProps={{ htmlInput: { min: 0, max: 59 } }} sx={{ width: 80 }} />
+                            <TextField label="Hours" type="number" size="small" value={durationHours} onChange={(e) => setDurationHours(e.target.value)} slotProps={{ htmlInput: { min: 0 } }} sx={{ width: { xs: 'calc(50% - 16px)', md: 80 } }} />
+                            <TextField label="Min" type="number" size="small" value={durationMinutes} onChange={(e) => setDurationMinutes(e.target.value)} slotProps={{ htmlInput: { min: 0, max: 59 } }} sx={{ width: { xs: 'calc(50% - 16px)', md: 80 } }} />
                         </Box>
                         <TextField
                             label={hasStartParam ? 'End Time Label (optional)' : 'Start Time Label (optional)'}
@@ -467,10 +467,10 @@ const StepCreateScreen = () => {
                                     label="Start Time"
                                     planId={planId}
                                 />
-                                <Box sx={{ display: 'flex', gap: 1, mt: 2, alignItems: 'center' }}>
+                                <Box sx={{ display: 'flex', gap: 1, mt: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                                     <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>Duration</Typography>
-                                    <TextField label="Hours" type="number" size="small" value={durationHours} onChange={(e) => setDurationHours(e.target.value)} slotProps={{ htmlInput: { min: 0 } }} sx={{ width: 80 }} />
-                                    <TextField label="Min" type="number" size="small" value={durationMinutes} onChange={(e) => setDurationMinutes(e.target.value)} slotProps={{ htmlInput: { min: 0, max: 59 } }} sx={{ width: 80 }} />
+                                    <TextField label="Hours" type="number" size="small" value={durationHours} onChange={(e) => setDurationHours(e.target.value)} slotProps={{ htmlInput: { min: 0 } }} sx={{ width: { xs: 'calc(50% - 16px)', md: 80 } }} />
+                                    <TextField label="Min" type="number" size="small" value={durationMinutes} onChange={(e) => setDurationMinutes(e.target.value)} slotProps={{ htmlInput: { min: 0, max: 59 } }} sx={{ width: { xs: 'calc(50% - 16px)', md: 80 } }} />
                                 </Box>
                                 <TextField label="End Time Label (optional)" fullWidth size="small" value={derivedTimeLabel} onChange={(e) => setDerivedTimeLabel(e.target.value)} placeholder={`${working.name || 'Event'} End`} sx={{ mt: 2 }} />
                             </>
@@ -507,10 +507,10 @@ const StepCreateScreen = () => {
                                     label="End Time"
                                     planId={planId}
                                 />
-                                <Box sx={{ display: 'flex', gap: 1, mt: 2, alignItems: 'center' }}>
+                                <Box sx={{ display: 'flex', gap: 1, mt: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                                     <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>Duration</Typography>
-                                    <TextField label="Hours" type="number" size="small" value={durationHours} onChange={(e) => setDurationHours(e.target.value)} slotProps={{ htmlInput: { min: 0 } }} sx={{ width: 80 }} />
-                                    <TextField label="Min" type="number" size="small" value={durationMinutes} onChange={(e) => setDurationMinutes(e.target.value)} slotProps={{ htmlInput: { min: 0, max: 59 } }} sx={{ width: 80 }} />
+                                    <TextField label="Hours" type="number" size="small" value={durationHours} onChange={(e) => setDurationHours(e.target.value)} slotProps={{ htmlInput: { min: 0 } }} sx={{ width: { xs: 'calc(50% - 16px)', md: 80 } }} />
+                                    <TextField label="Min" type="number" size="small" value={durationMinutes} onChange={(e) => setDurationMinutes(e.target.value)} slotProps={{ htmlInput: { min: 0, max: 59 } }} sx={{ width: { xs: 'calc(50% - 16px)', md: 80 } }} />
                                 </Box>
                                 <TextField label="Start Time Label (optional)" fullWidth size="small" value={derivedTimeLabel} onChange={(e) => setDerivedTimeLabel(e.target.value)} placeholder={`${working.name || 'Event'} Start`} sx={{ mt: 2 }} />
                             </>

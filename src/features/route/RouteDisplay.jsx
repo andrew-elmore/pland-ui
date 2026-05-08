@@ -62,8 +62,8 @@ const RouteDisplay = ({ route }) => {
 
     return first ? (
         <APIProvider apiKey={GOOGLE_MAPS_API_KEY}>
-            <Box sx={{ display: 'flex', border: '1px solid', borderColor: 'divider', borderRadius: '8px', overflow: 'hidden', height: 450 }}>
-                <Box sx={{ width: '40%', flexShrink: 0, borderRight: '1px solid', borderColor: 'divider' }}>
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, border: '1px solid', borderColor: 'divider', borderRadius: '8px', overflow: 'hidden', height: { xs: 'auto', md: 450 } }}>
+                <Box sx={{ width: { xs: '100%', md: '40%' }, height: { xs: 250, md: 'auto' }, flexShrink: 0, borderRight: { md: '1px solid' }, borderBottom: { xs: '1px solid', md: 'none' }, borderColor: 'divider' }}>
                     <Map
                         defaultCenter={center}
                         defaultZoom={10}

@@ -72,8 +72,8 @@ const RouteOptionsPanel = ({ options, selectedIdx, onSelect, departureTime }) =>
         option.distanceDisplay || formatDistance(option.distanceMeters);
 
     return (
-        <Box sx={{ display: 'flex', border: '1px solid', borderColor: 'divider', borderRadius: '8px', overflow: 'hidden', height: 450 }}>
-            <Box sx={{ width: '25%', flexShrink: 0, borderRight: '1px solid', borderColor: 'divider', overflow: 'auto' }}>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, border: '1px solid', borderColor: 'divider', borderRadius: '8px', overflow: 'hidden', height: { xs: 'auto', md: 450 } }}>
+            <Box sx={{ width: { xs: '100%', md: '25%' }, flexShrink: 0, borderRight: { md: '1px solid' }, borderBottom: { xs: '1px solid', md: 'none' }, borderColor: 'divider', overflow: 'auto', maxHeight: { xs: 150, md: 'none' } }}>
                 <List disablePadding>
                     {options.map((option, idx) => (
                         <ListItemButton
@@ -94,7 +94,7 @@ const RouteOptionsPanel = ({ options, selectedIdx, onSelect, departureTime }) =>
 
             {selected && first ? (
                 <APIProvider apiKey={GOOGLE_MAPS_API_KEY}>
-                    <Box sx={{ width: '30%', flexShrink: 0, borderRight: '1px solid', borderColor: 'divider' }}>
+                    <Box sx={{ width: { xs: '100%', md: '30%' }, height: { xs: 250, md: 'auto' }, flexShrink: 0, borderRight: { md: '1px solid' }, borderBottom: { xs: '1px solid', md: 'none' }, borderColor: 'divider' }}>
                         <Map
                             defaultCenter={{ lat: (first.startLat + last.endLat) / 2, lng: (first.startLng + last.endLng) / 2 }}
                             defaultZoom={10}
@@ -129,7 +129,7 @@ const RouteOptionsPanel = ({ options, selectedIdx, onSelect, departureTime }) =>
                         </Map>
                     </Box>
 
-                    <Box sx={{ width: '45%', flexShrink: 0, p: 1.5, overflow: 'auto' }}>
+                    <Box sx={{ width: { xs: '100%', md: '45%' }, flexShrink: { md: 0 }, p: 1.5, overflow: 'auto' }}>
                         <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.5 }}>Directions</Typography>
                         <List disablePadding dense>
                             {steps.map((step, i) => (
@@ -139,7 +139,7 @@ const RouteOptionsPanel = ({ options, selectedIdx, onSelect, departureTime }) =>
                     </Box>
                 </APIProvider>
             ) : (
-                <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: { xs: 100, md: 0 } }}>
                     <Typography variant="body2" color="text.secondary">Select a route</Typography>
                 </Box>
             )}

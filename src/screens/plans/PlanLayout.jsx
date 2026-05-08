@@ -11,7 +11,11 @@ import {
     ListItemIcon,
     ListItemText,
     CircularProgress,
+    BottomNavigation,
+    BottomNavigationAction,
+    useMediaQuery,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MapIcon from '@mui/icons-material/Map';
 import PeopleIcon from '@mui/icons-material/People';
@@ -38,6 +42,8 @@ const PlanLayout = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const dispatch = useDispatch();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
     const plan = useSelector(planSelectors.current);
     const { isLoading, isLoaded } = useSelector(planSelectors.currentMeta);
@@ -50,6 +56,7 @@ const PlanLayout = () => {
     }, [dispatch, planId, plan.id]);
 
     const activePath = location.pathname.split('/').pop();
+    const activeIndex = navItems.findIndex((item) => item.path === activePath);
 
     if (isLoaded && !plan.id) {
         return (
@@ -59,8 +66,48 @@ const PlanLayout = () => {
         );
     }
 
+    if (isMobile) {
+        return (
+            <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100dvh - 64px)' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, px: 1, py: 1, borderBottom: '1px solid', borderColor: 'divider', flexShrink: 0 }}>
+                    <IconButton onClick={() => navigate(ROUTES.HOME)} size="small">
+                        <ArrowBackIcon fontSize="small" />
+                    </IconButton>
+                    {isLoading && !isLoaded ? (
+                        <CircularProgress size={16} />
+                    ) : (
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {plan.name}
+                        </Typography>
+                    )}
+                </Box>
+
+                <Box sx={{ flex: 1, overflow: 'auto', p: 2, minHeight: 0 }}>
+                    {error && <Alert severity="error" sx={{ mb: 1 }}>{error}</Alert>}
+                    <Outlet />
+                </Box>
+
+                <BottomNavigation
+                    value={activeIndex >= 0 ? activeIndex : false}
+                    onChange={(_, newValue) => navigate(navItems[newValue].path)}
+                    showLabels
+                    sx={{ borderTop: '1px solid', borderColor: 'divider', flexShrink: 0, minHeight: 56 }}
+                >
+                    {navItems.map((item) => (
+                        <BottomNavigationAction
+                            key={item.path}
+                            label={item.label}
+                            icon={item.icon}
+                            sx={{ minWidth: 0, px: 0.5, '& .MuiBottomNavigationAction-label': { fontSize: '0.6rem' } }}
+                        />
+                    ))}
+                </BottomNavigation>
+            </Box>
+        );
+    }
+
     return (
-        <Box sx={{ display: 'flex', height: 'calc(100vh - 64px)' }}>
+        <Box sx={{ display: 'flex', height: 'calc(100dvh - 64px)' }}>
             <Box sx={{ width: NAV_WIDTH, flexShrink: 0, borderRight: '1px solid', borderColor: 'divider', display: 'flex', flexDirection: 'column' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, px: 1, py: 1.5, borderBottom: '1px solid', borderColor: 'divider' }}>
                     <IconButton onClick={() => navigate(ROUTES.HOME)} size="small">

@@ -160,7 +160,7 @@ const TimeForm = ({
                     <Alert severity="info" sx={{ fontSize: '0.8rem', mb: 1.5 }}>
                         This time is computed from a route. The route duration is set on the step.
                     </Alert>
-                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
                         <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
                             Buffer
                         </Typography>
@@ -171,7 +171,7 @@ const TimeForm = ({
                             value={offsetHours}
                             onChange={(e) => setOffsetHours(e.target.value)}
                             slotProps={{ htmlInput: { min: 0 } }}
-                            sx={{ width: 80 }}
+                            sx={{ width: { xs: 'calc(50% - 16px)', md: 80 } }}
                         />
                         <TextField
                             label="Min"
@@ -180,12 +180,12 @@ const TimeForm = ({
                             value={offsetMinutes}
                             onChange={(e) => setOffsetMinutes(e.target.value)}
                             slotProps={{ htmlInput: { min: 0, max: 59 } }}
-                            sx={{ width: 80 }}
+                            sx={{ width: { xs: 'calc(50% - 16px)', md: 80 } }}
                         />
                     </Box>
                 </>
             ) : isDependent ? (
-                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
                     <ToggleButtonGroup
                         value={offsetSign}
                         exclusive
@@ -202,7 +202,7 @@ const TimeForm = ({
                         value={offsetHours}
                         onChange={(e) => setOffsetHours(e.target.value)}
                         slotProps={{ htmlInput: { min: 0 } }}
-                        sx={{ width: 80 }}
+                        sx={{ width: { xs: 'calc(50% - 16px)', md: 80 } }}
                     />
                     <TextField
                         label="Min"
@@ -211,7 +211,7 @@ const TimeForm = ({
                         value={offsetMinutes}
                         onChange={(e) => setOffsetMinutes(e.target.value)}
                         slotProps={{ htmlInput: { min: 0, max: 59 } }}
-                        sx={{ width: 80 }}
+                        sx={{ width: { xs: 'calc(50% - 16px)', md: 80 } }}
                     />
                 </Box>
             ) : (

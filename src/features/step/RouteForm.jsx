@@ -117,10 +117,10 @@ const RouteForm = ({
             />
         )}
 
-        <Box sx={{ display: 'flex', gap: 1, mt: 2, alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', gap: 1, mt: 2, alignItems: 'center', flexWrap: 'wrap' }}>
             <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>Padding</Typography>
-            <TextField label="Hours" type="number" size="small" value={paddingHours} onChange={(e) => onPaddingHoursChange(e.target.value)} slotProps={{ htmlInput: { min: 0 } }} sx={{ width: 80 }} />
-            <TextField label="Min" type="number" size="small" value={paddingMinutes} onChange={(e) => onPaddingMinutesChange(e.target.value)} slotProps={{ htmlInput: { min: 0, max: 59 } }} sx={{ width: 80 }} />
+            <TextField label="Hours" type="number" size="small" value={paddingHours} onChange={(e) => onPaddingHoursChange(e.target.value)} slotProps={{ htmlInput: { min: 0 } }} sx={{ width: { xs: 'calc(50% - 16px)', md: 80 } }} />
+            <TextField label="Min" type="number" size="small" value={paddingMinutes} onChange={(e) => onPaddingMinutesChange(e.target.value)} slotProps={{ htmlInput: { min: 0, max: 59 } }} sx={{ width: { xs: 'calc(50% - 16px)', md: 80 } }} />
         </Box>
 
         {originLocationId && destinationLocationId && routeTimeId && (

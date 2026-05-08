@@ -212,8 +212,8 @@ const PlanItinerariesScreen = () => {
     }
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', m: -2, height: 'calc(100vh - 64px)' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: 1, borderColor: 'divider', flexShrink: 0 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', m: -2, height: 'calc(100dvh - 64px)' }}>
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, alignItems: { md: 'center' }, justifyContent: 'space-between', borderBottom: 1, borderColor: 'divider', flexShrink: 0 }}>
                 <Tabs value={selectedTab < itineraries.length ? selectedTab : false} onChange={handleTabChange} variant="scrollable" scrollButtons="auto">
                     {itineraries.map((itinerary) => (
                         <Tab key={itinerary.id} label={itinerary.name} />
@@ -221,7 +221,7 @@ const PlanItinerariesScreen = () => {
                     <Tab icon={<AddIcon fontSize="small" />} sx={{ minWidth: 48 }} />
                 </Tabs>
                 {selectedItinerary && (
-                    <Button variant="outlined" size="small" startIcon={<AddIcon />} onClick={handleAddStep} sx={{ borderRadius: '20px', textTransform: 'none', fontWeight: 600, mr: 1, flexShrink: 0 }}>
+                    <Button variant="outlined" size="small" startIcon={<AddIcon />} onClick={handleAddStep} sx={{ borderRadius: '20px', textTransform: 'none', fontWeight: 600, mr: 1, flexShrink: 0, alignSelf: { xs: 'flex-end', md: 'center' }, mb: { xs: 0.5, md: 0 } }}>
                         Add Step
                     </Button>
                 )}
@@ -229,7 +229,7 @@ const PlanItinerariesScreen = () => {
 
             {selectedItinerary && participantList.length > 0 && (
                 <Box sx={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-                    <Box sx={{ display: 'flex', minWidth: TIME_COL_WIDTH + participantList.length * 180 }}>
+                    <Box sx={{ display: 'flex', minWidth: { xs: TIME_COL_WIDTH + participantList.length * 140, md: TIME_COL_WIDTH + participantList.length * 180 } }}>
                         <Box sx={{ width: TIME_COL_WIDTH, flexShrink: 0, pt: '36px' }}>
                             <TimelineTrack
                                 times={stepTimes}
@@ -249,7 +249,7 @@ const PlanItinerariesScreen = () => {
                             const pStartTimeIds = new Set(pSteps.map((s) => s.startTimeId).filter(Boolean));
                             const createUrl = ROUTES.STEP_CREATE.replace(':planId', planId).replace(':itineraryId', selectedItinerary.id);
                             return (
-                                <Box key={p.id} sx={{ flex: 1, minWidth: 150, borderLeft: '1px solid', borderColor: 'divider' }}>
+                                <Box key={p.id} sx={{ flex: 1, minWidth: { xs: 120, md: 150 }, borderLeft: '1px solid', borderColor: 'divider' }}>
                                     <Box sx={{ height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid', borderColor: 'divider' }}>
                                         <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.7rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', px: 1 }}>
                                             {p.fullName || `${p.firstName} ${p.lastName}`.trim()}
