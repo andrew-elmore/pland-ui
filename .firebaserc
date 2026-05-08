@@ -1,0 +1,12 @@
+{
+  "projects": {
+    "default": "pland-495017"
+  },
+  "targets": {
+    "pland-495017": {
+      "hosting": {
+        "pland": ["pland"]
+      }
+    }
+  }
+}

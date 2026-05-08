@@ -4,9 +4,9 @@ export const themeOptions = {
     palette: {
         mode: 'dark',
         primary: {
-            light: '#c34cd7',
-            main: '#9c27b0',
-            dark: '#641971',
+            light: '#5a8a4a',
+            main: '#2e7d32',
+            dark: '#1b5e20',
             contrastText: '#ffffff',
         },
         secondary: {

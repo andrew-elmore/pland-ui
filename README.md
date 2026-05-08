@@ -200,7 +200,7 @@ After cloning this boilerplate, follow these steps to make it your own:
 
 ### 1. Update Project Identity
 Do a project-wide search and replace:
-- `{{App Name}}` → Your application name
+- `Pland` → Your application name
 - `{{domain}}` → Your domain/organization
 
 **Files to update:**
