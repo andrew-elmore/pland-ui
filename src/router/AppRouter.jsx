@@ -7,6 +7,9 @@ import PlanLayout from '../screens/plans/PlanLayout';
 import PlanItinerariesScreen from '../screens/plans/PlanItinerariesScreen';
 import PlanParticipantsScreen from '../screens/plans/PlanParticipantsScreen';
 import PlanLocationsScreen from '../screens/plans/PlanLocationsScreen';
+import PlanTimesScreen from '../screens/plans/PlanTimesScreen';
+import StepCreateScreen from '../screens/plans/StepCreateScreen';
+import StepEditScreen from '../screens/plans/StepEditScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 
@@ -17,6 +20,9 @@ const AppRouter = () => {
             <Route path={ROUTES.PLAN} element={<PlanLayout />}>
                 <Route index element={<Navigate to="itineraries" replace />} />
                 <Route path="itineraries" element={<PlanItinerariesScreen />} />
+                <Route path="itineraries/:itineraryId/steps/create" element={<StepCreateScreen />} />
+                <Route path="itineraries/:itineraryId/steps/:stepId/edit" element={<StepEditScreen />} />
+                <Route path="times" element={<PlanTimesScreen />} />
                 <Route path="participants" element={<PlanParticipantsScreen />} />
                 <Route path="locations" element={<PlanLocationsScreen />} />
             </Route>

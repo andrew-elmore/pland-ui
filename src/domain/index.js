@@ -8,3 +8,7 @@ export { default as Plan } from './Plan';
 export { default as PlanArray } from './PlanArray';
 export { default as Profile } from './Profile';
 export { default as ProfileArray } from './ProfileArray';
+export { default as Step } from './Step';
+export { default as StepArray } from './StepArray';
+export { default as Time } from './Time';
+export { default as TimeArray } from './TimeArray';

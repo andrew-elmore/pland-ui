@@ -6,6 +6,8 @@ import location from './location';
 import participant from './participant';
 import plan from './plan';
 import profile from './profile';
+import step from './step';
+import time from './time';
 import ui from './ui';
 
 const rootReducer = combineReducers({
@@ -15,6 +17,8 @@ const rootReducer = combineReducers({
     participant,
     plan,
     profile,
+    step,
+    time,
     ui,
 });
 
