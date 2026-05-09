@@ -273,6 +273,7 @@ const PlanItinerariesScreen = () => {
                                                 onClick={handleViewStep}
                                                 createUrl={createUrl}
                                                 navigate={navigate}
+                                                participantId={p.id}
                                             />
                                         ))}
                                     </Box>

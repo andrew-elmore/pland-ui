@@ -80,13 +80,13 @@ const buildSegments = (step) => {
     return segments;
 };
 
-const StepBlock = ({ step, top, actualHeight, hasAbove, hasBelow, isHovered, onHover, onClick, createUrl, navigate }) => {
+const StepBlock = ({ step, top, actualHeight, hasAbove, hasBelow, isHovered, onHover, onClick, createUrl, navigate, participantId }) => {
     const labelFits = actualHeight >= 18;
     const needsExpansion = isHovered && !labelFits;
     const height = needsExpansion ? 24 : actualHeight;
     const aboveLocationId = step.route ? step.route.originLocationId : step.locationId;
     const belowLocationId = step.route ? step.route.destinationLocationId : step.locationId;
-    const pIds = (step.participantIds || []).join(',');
+    const pIds = participantId || '';
     const segments = useMemo(() => step.route ? buildSegments(step) : null, [step]);
 
     return (
@@ -111,11 +111,11 @@ const StepBlock = ({ step, top, actualHeight, hasAbove, hasBelow, isHovered, onH
                 transition: 'border-color 0.15s, background-color 0.15s, box-shadow 0.15s, height 0.15s',
                 display: 'flex',
                 alignItems: 'center',
-                overflow: 'hidden',
+                overflow: 'visible',
             }}
         >
             {segments && (
-                <Box sx={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: BAR_WIDTH, display: 'flex', flexDirection: 'column' }}>
+                <Box sx={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: BAR_WIDTH, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                     {segments.map((seg, i) => (
                         <Box key={i} sx={{ flex: `${seg.fraction} 0 0%`, background: seg.bg, minHeight: '1px' }} />
                     ))}
@@ -130,7 +130,7 @@ const StepBlock = ({ step, top, actualHeight, hasAbove, hasBelow, isHovered, onH
                 <IconButton
                     size="small"
                     onClick={(e) => { e.stopPropagation(); navigate(`${createUrl}?endTimeId=${step.startTimeId}${aboveLocationId ? `&locationId=${aboveLocationId}` : ''}${pIds ? `&participantIds=${pIds}` : ''}`); }}
-                    sx={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', width: 24, height: 24, backgroundColor: 'background.paper', border: '1px solid', borderColor: 'divider', zIndex: 1, '&:hover': { backgroundColor: 'action.hover' } }}
+                    sx={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', width: 24, height: 24, backgroundColor: 'primary.main', color: 'primary.contrastText', border: '1px solid', borderColor: 'primary.dark', zIndex: 3, '&:hover': { backgroundColor: 'primary.dark' } }}
                 >
                     <AddIcon sx={{ fontSize: 16 }} />
                 </IconButton>
@@ -139,7 +139,7 @@ const StepBlock = ({ step, top, actualHeight, hasAbove, hasBelow, isHovered, onH
                 <IconButton
                     size="small"
                     onClick={(e) => { e.stopPropagation(); navigate(`${createUrl}?startTimeId=${step.endTimeId}${belowLocationId ? `&locationId=${belowLocationId}` : ''}${pIds ? `&participantIds=${pIds}` : ''}`); }}
-                    sx={{ position: 'absolute', bottom: -12, left: '50%', transform: 'translateX(-50%)', width: 24, height: 24, backgroundColor: 'background.paper', border: '1px solid', borderColor: 'divider', zIndex: 1, '&:hover': { backgroundColor: 'action.hover' } }}
+                    sx={{ position: 'absolute', bottom: -12, left: '50%', transform: 'translateX(-50%)', width: 24, height: 24, backgroundColor: 'primary.main', color: 'primary.contrastText', border: '1px solid', borderColor: 'primary.dark', zIndex: 3, '&:hover': { backgroundColor: 'primary.dark' } }}
                 >
                     <AddIcon sx={{ fontSize: 16 }} />
                 </IconButton>
