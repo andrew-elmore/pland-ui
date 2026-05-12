@@ -11,13 +11,17 @@ import {
     IconButton,
     CircularProgress,
     Alert,
+    Autocomplete,
+    TextField,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import MergeIcon from '@mui/icons-material/CallMerge';
 import SubdirectoryArrowRightIcon from '@mui/icons-material/SubdirectoryArrowRight';
 import { actions as timeActions, selectors as timeSelectors } from '../../store/time';
 import { actions as uiActions } from '../../store/ui';
+import useMutateEffect from '../../hooks/useMutateEffect';
 import TimeForm from '../../components/common/TimeFormDialog';
 import Form from '../../components/common/Form';
 
@@ -32,6 +36,8 @@ const TimeScreen = () => {
 
     const [editingTime, setEditingTime] = useState(null);
     const [defaultParentTimeId, setDefaultParentTimeId] = useState(null);
+    const [mergingTime, setMergingTime] = useState(null);
+    const [mergeTarget, setMergeTarget] = useState(null);
 
     useEffect(() => {
         if (planId) {
@@ -61,6 +67,36 @@ const TimeScreen = () => {
 
     const handleRemove = (id) => {
         dispatch(timeActions.remove(id));
+    };
+
+    const getMergeOptions = (time) => {
+        const timeList = [...times];
+        const isRoute = time.routeId != null && time.parentTimeId != null;
+        return timeList.filter(t => {
+            if (t.id === time.id) return false;
+            if (isRoute && t.routeId != null && t.parentTimeId != null) return false;
+            return true;
+        });
+    };
+
+    const submitMerge = useMutateEffect(isMutating, error, {
+        onSuccess: () => {
+            setMergingTime(null);
+            setMergeTarget(null);
+            dispatch(uiActions.closeDialog());
+            dispatch(timeActions.list(planId));
+        },
+    });
+
+    const handleMerge = () => {
+        if (!mergingTime || !mergeTarget) return;
+        submitMerge(timeActions.merge(mergingTime.id, mergeTarget.id));
+    };
+
+    const handleOpenMerge = (time) => {
+        setMergingTime(time);
+        setMergeTarget(null);
+        dispatch(uiActions.openDialog(`time-merge-${time.id}`));
     };
 
     if (isLoading && !isLoaded) {
@@ -95,6 +131,9 @@ const TimeScreen = () => {
                                 <AddIcon fontSize="small" />
                             </IconButton>
                         )}
+                        <IconButton size="small" onClick={() => handleOpenMerge(t)} title="Merge">
+                            <MergeIcon fontSize="small" />
+                        </IconButton>
                         <IconButton size="small" onClick={() => handleOpenEdit(t)}>
                             <EditIcon fontSize="small" />
                         </IconButton>
@@ -165,6 +204,35 @@ const TimeScreen = () => {
                     />
                 )}
             </Form>
+
+            {mergingTime && (
+                <Form
+                    formType="time-merge"
+                    formData={mergingTime}
+                    title={`Merge: ${mergingTime.displayLabel}`}
+                    maxWidth="xs"
+                    onClose={() => { setMergingTime(null); setMergeTarget(null); }}
+                    actions={({ onClose }) => (
+                        <>
+                            <Button variant="outlined" size="small" onClick={onClose} sx={{ borderRadius: '20px', textTransform: 'none' }}>Cancel</Button>
+                            <Button variant="contained" size="small" onClick={handleMerge} disabled={isMutating || !mergeTarget} sx={{ borderRadius: '20px', textTransform: 'none', fontWeight: 600 }}>Merge</Button>
+                        </>
+                    )}
+                >
+                    <Autocomplete
+                        options={getMergeOptions(mergingTime)}
+                        getOptionLabel={(option) => option.displayLabel || ''}
+                        value={mergeTarget}
+                        onChange={(_, value) => setMergeTarget(value)}
+                        isOptionEqualToValue={(a, b) => a.id === b.id}
+                        renderInput={(params) => (
+                            <TextField {...params} label="Merge with" size="small" autoFocus />
+                        )}
+                        size="small"
+                        sx={{ mt: 1 }}
+                    />
+                </Form>
+            )}
         </>
     );
 };

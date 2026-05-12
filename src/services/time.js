@@ -9,3 +9,5 @@ export const create = (data) => request('/times', { method: 'POST', data });
 export const update = (id, data) => request(`/times/${id}`, { method: 'PUT', data });
 
 export const remove = (id) => request(`/times/${id}`, { method: 'DELETE' });
+
+export const merge = (id, sourceTimeId) => request(`/times/${id}/merge`, { method: 'POST', data: { sourceTimeId } });

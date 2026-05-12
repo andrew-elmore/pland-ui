@@ -6,6 +6,7 @@ const LIST = 'LIST_TIMES';
 const CREATE = 'CREATE_TIME';
 const UPDATE = 'UPDATE_TIME';
 const DELETE = 'DELETE_TIME';
+const MERGE = 'MERGE_TIME';
 
 const initialState = {
     list: {
@@ -68,7 +69,8 @@ export function reducer(state = initialState, action) {
 
     case `${CREATE}_PENDING`:
     case `${UPDATE}_PENDING`:
-    case `${DELETE}_PENDING`: {
+    case `${DELETE}_PENDING`:
+    case `${MERGE}_PENDING`: {
         return {
             ...state,
             current: {
@@ -112,9 +114,19 @@ export function reducer(state = initialState, action) {
         };
     }
 
+    case `${MERGE}_FULFILLED`: {
+        return {
+            ...state,
+            current: {
+                ...initialState.current,
+            },
+        };
+    }
+
     case `${CREATE}_REJECTED`:
     case `${UPDATE}_REJECTED`:
-    case `${DELETE}_REJECTED`: {
+    case `${DELETE}_REJECTED`:
+    case `${MERGE}_REJECTED`: {
         return {
             ...state,
             current: {
@@ -154,6 +166,12 @@ export const actions = {
         type: DELETE,
         meta: { id },
         payload: timeService.remove(id),
+    }),
+
+    merge: (recipientId, sourceTimeId) => ({
+        type: MERGE,
+        meta: { recipientId, sourceTimeId },
+        payload: timeService.merge(recipientId, sourceTimeId),
     }),
 };
 
