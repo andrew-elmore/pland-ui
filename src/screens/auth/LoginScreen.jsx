@@ -2,16 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
-import {
-    Box,
-    Button,
-    Container,
-    TextField,
-    Typography,
-    Alert,
-} from '@mui/material';
+import { Box, Container, Typography, Alert } from '@mui/material';
 import { actions, selectors } from '../../store/auth';
 import ROUTES from '../../router/routes';
+import LoginForm from '../../features/auth/LoginForm';
 
 const LoginScreen = () => {
     const dispatch = useDispatch();
@@ -48,6 +42,12 @@ const LoginScreen = () => {
         return Object.keys(newErrors).length === 0;
     };
 
+    const handleChange = (field, value) => {
+        if (field === 'email') setEmail(value);
+        if (field === 'password') setPassword(value);
+        if (errors[field]) setErrors((prev) => ({ ...prev, [field]: null }));
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!validate()) return;
@@ -65,49 +65,26 @@ const LoginScreen = () => {
                         {storeError}
                     </Alert>
                 )}
-                <Box component="form" onSubmit={handleSubmit}>
-                    <TextField
-                        fullWidth
-                        label="Email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        error={!!errors.email}
-                        helperText={errors.email}
-                        sx={{ mb: 2 }}
-                    />
-                    <TextField
-                        fullWidth
-                        label="Password"
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        error={!!errors.password}
-                        helperText={errors.password}
-                        sx={{ mb: 3 }}
-                    />
-                    <Button
-                        fullWidth
-                        variant="contained"
-                        size="large"
-                        type="submit"
-                        disabled={isLoading}
-                    >
-                        {isLoading ? 'Logging in...' : 'Login'}
-                    </Button>
-                    <Box sx={{ mt: 2, textAlign: 'center' }}>
-                        <Typography variant="body2">
-                                Don't have an account?{' '}
-                            <Typography
-                                component={Link}
-                                to={ROUTES.REGISTER}
-                                variant="body2"
-                                sx={{ color: 'primary.main' }}
-                            >
-                                    Register
-                            </Typography>
+                <LoginForm
+                    email={email}
+                    password={password}
+                    onChange={handleChange}
+                    errors={errors}
+                    onSubmit={handleSubmit}
+                    isLoading={isLoading}
+                />
+                <Box sx={{ mt: 2, textAlign: 'center' }}>
+                    <Typography variant="body2">
+                            Don't have an account?{' '}
+                        <Typography
+                            component={Link}
+                            to={ROUTES.REGISTER}
+                            variant="body2"
+                            sx={{ color: 'primary.main' }}
+                        >
+                                Register
                         </Typography>
-                    </Box>
+                    </Typography>
                 </Box>
             </Box>
         </Container>

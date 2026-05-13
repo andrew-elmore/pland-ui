@@ -2,16 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
-import {
-    Box,
-    Button,
-    Container,
-    TextField,
-    Typography,
-    Alert,
-} from '@mui/material';
+import { Box, Container, Typography, Alert } from '@mui/material';
 import { actions, selectors } from '../../store/auth';
 import ROUTES from '../../router/routes';
+import RegisterForm from '../../features/auth/RegisterForm';
 
 const RegisterScreen = () => {
     const dispatch = useDispatch();
@@ -56,6 +50,14 @@ const RegisterScreen = () => {
         return Object.keys(newErrors).length === 0;
     };
 
+    const handleChange = (field, value) => {
+        if (field === 'firstName') setFirstName(value);
+        if (field === 'lastName') setLastName(value);
+        if (field === 'email') setEmail(value);
+        if (field === 'password') setPassword(value);
+        if (errors[field]) setErrors((prev) => ({ ...prev, [field]: null }));
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!validate()) return;
@@ -73,67 +75,28 @@ const RegisterScreen = () => {
                         {storeError}
                     </Alert>
                 )}
-                <Box component="form" onSubmit={handleSubmit}>
-                    <TextField
-                        fullWidth
-                        label="First Name"
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                        error={!!errors.firstName}
-                        helperText={errors.firstName}
-                        sx={{ mb: 2 }}
-                    />
-                    <TextField
-                        fullWidth
-                        label="Last Name"
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                        error={!!errors.lastName}
-                        helperText={errors.lastName}
-                        sx={{ mb: 2 }}
-                    />
-                    <TextField
-                        fullWidth
-                        label="Email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        error={!!errors.email}
-                        helperText={errors.email}
-                        sx={{ mb: 2 }}
-                    />
-                    <TextField
-                        fullWidth
-                        label="Password"
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        error={!!errors.password}
-                        helperText={errors.password}
-                        sx={{ mb: 3 }}
-                    />
-                    <Button
-                        fullWidth
-                        variant="contained"
-                        size="large"
-                        type="submit"
-                        disabled={isLoading}
-                    >
-                        {isLoading ? 'Creating account...' : 'Register'}
-                    </Button>
-                    <Box sx={{ mt: 2, textAlign: 'center' }}>
-                        <Typography variant="body2">
-                                Already have an account?{' '}
-                            <Typography
-                                component={Link}
-                                to={ROUTES.LOGIN}
-                                variant="body2"
-                                sx={{ color: 'primary.main' }}
-                            >
-                                    Login
-                            </Typography>
+                <RegisterForm
+                    firstName={firstName}
+                    lastName={lastName}
+                    email={email}
+                    password={password}
+                    onChange={handleChange}
+                    errors={errors}
+                    onSubmit={handleSubmit}
+                    isLoading={isLoading}
+                />
+                <Box sx={{ mt: 2, textAlign: 'center' }}>
+                    <Typography variant="body2">
+                            Already have an account?{' '}
+                        <Typography
+                            component={Link}
+                            to={ROUTES.LOGIN}
+                            variant="body2"
+                            sx={{ color: 'primary.main' }}
+                        >
+                                Login
                         </Typography>
-                    </Box>
+                    </Typography>
                 </Box>
             </Box>
         </Container>
