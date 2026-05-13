@@ -40,6 +40,9 @@ coverage/
 # Unit test reports
 TEST*.xml
 
+# Firebase
+.firebase/
+
 # Playwright test artifacts
 test-results/
 playwright-report/
