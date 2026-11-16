@@ -33,9 +33,7 @@ import pause from '../../utils/pause.js';
  */
 export default function StepBlockComponent(page) {
     const getBlock = (stepName) =>
-        page.locator('[style*="position: absolute"]', { hasText: stepName })
-            .filter({ has: page.locator('[style*="cursor: pointer"]') })
-            .first();
+        page.locator(`[data-step-name="${stepName}"]`).first();
 
     return {
         async click(stepName) {
@@ -49,18 +47,18 @@ export default function StepBlockComponent(page) {
         },
 
         async addAbove(stepName) {
-            await getBlock(stepName).hover();
+            const block = getBlock(stepName);
+            await block.hover();
             await pause(300);
-            const buttons = getBlock(stepName).getByRole('button');
-            await buttons.first().click();
+            await block.getByRole('button').first().click();
             await pause(400);
         },
 
         async addBelow(stepName) {
-            await getBlock(stepName).hover();
+            const block = getBlock(stepName);
+            await block.hover();
             await pause(300);
-            const buttons = getBlock(stepName).getByRole('button');
-            await buttons.last().click();
+            await block.getByRole('button').last().click();
             await pause(400);
         },
 
@@ -69,8 +67,14 @@ export default function StepBlockComponent(page) {
         },
 
         async getVisibleStepNames() {
-            const blocks = page.locator('[style*="position: absolute"] [style*="font-weight: 700"]');
-            return blocks.allTextContents();
+            const blocks = page.locator('[data-step-name]');
+            const count = await blocks.count();
+            const names = [];
+            for (let i = 0; i < count; i++) {
+                const name = await blocks.nth(i).getAttribute('data-step-name');
+                if (name) names.push(name);
+            }
+            return names;
         },
 
         locator: (stepName) => getBlock(stepName),

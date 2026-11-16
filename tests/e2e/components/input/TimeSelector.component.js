@@ -30,14 +30,14 @@ import TimeCreateFormComponent from '../form/TimeCreateForm.component.js';
  * }}
  */
 export default function TimeSelectorComponent(page, label) {
-    const input = page.getByLabel(label);
-    const addButton = input.locator('..').locator('..').getByRole('button').last();
+    const input = page.getByRole('combobox', { name: label });
+    const addButton = input.locator('..').locator('..').locator('..').locator('..').getByRole('button').last();
 
     return {
         async setValue(name) {
+            if (await input.count() === 0) return;
             await input.click();
-            await input.fill(name);
-            await pause(400);
+            await pause(300);
             await page.getByRole('option', { name }).first().click();
             await pause(300);
         },

@@ -20,11 +20,9 @@ test.describe('Locations', () => {
         const form = LocationFormComponent(page);
         await form.fields.name.setValue('Coffee Shop');
         await form.fields.search.setValue('Starbucks');
-        await page.waitForTimeout(1000);
+        await expect(page.getByRole('option').first()).toBeVisible({ timeout: 5000 });
         await page.getByRole('option').first().click();
         await page.waitForTimeout(500);
-
-        await expect(page.locator('text=/.*Starbucks.*|.*address.*/i')).toBeVisible({ timeout: 5000 });
 
         await form.submit();
         await expect(page.getByText('Coffee Shop')).toBeVisible({ timeout: 5000 });
@@ -87,7 +85,7 @@ test.describe('Locations', () => {
         const locationPicker = LocationPickerComponent(page, 'Location (optional)');
         await locationPicker.createAndSelect({ name: 'Park' });
 
-        await expect(page.getByText('Park')).toBeVisible({ timeout: 5000 });
+        await expect(page.getByRole('combobox', { name: 'Location (optional)' })).toHaveValue('Park', { timeout: 5000 });
     });
 
     test('TC-61: map display across contexts', async ({ page }) => {

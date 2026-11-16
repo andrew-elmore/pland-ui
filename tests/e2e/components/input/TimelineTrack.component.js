@@ -31,13 +31,11 @@ import pause from '../../utils/pause.js';
  * }}
  */
 export default function TimelineTrackComponent(page) {
-    const track = page.locator('[style*="touch-action: none"]').first();
-
     const getNodeByLabel = (label) =>
-        track.locator('span', { hasText: label }).first();
+        page.locator(`p:text-is("${label}")`).first();
 
     const getNodeCircle = (label) =>
-        getNodeByLabel(label).locator('..').locator('[style*="cursor"]').last();
+        getNodeByLabel(label).locator('..').locator('svg').first().locator('..');
 
     return {
         async dragNodeByLabel(label, deltaY) {
@@ -63,15 +61,15 @@ export default function TimelineTrackComponent(page) {
         },
 
         async getNodeLabels() {
-            const nodes = track.locator('span[style*="cursor: pointer"]');
-            return nodes.allTextContents();
+            const labels = page.locator('p').filter({ hasText: /^\d+:\d{2}\s*(AM|PM)$/i });
+            return labels.allTextContents();
         },
 
         async getNodeCount() {
-            const circles = track.locator('[style*="cursor: grab"], [style*="cursor: grabbing"]');
-            return circles.count();
+            const labels = page.locator('p').filter({ hasText: /^\d+:\d{2}\s*(AM|PM)$/i });
+            return labels.count();
         },
 
-        locator: track,
+        locator: page.locator('p').filter({ hasText: /\d+:\d{2}\s*(AM|PM)/i }).first().locator('../..'),
     };
 }

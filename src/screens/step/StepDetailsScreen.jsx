@@ -80,6 +80,7 @@ const StepDetailsScreen = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <IconButton
                         size="small"
+                        aria-label="Back"
                         onClick={() => navigate(ROUTES.PLAN_ITINERARIES.replace(':planId', planId))}
                     >
                         <ArrowBackIcon fontSize="small" />
@@ -90,6 +91,7 @@ const StepDetailsScreen = () => {
                 </Box>
                 <IconButton
                     size="small"
+                    aria-label="Edit"
                     onClick={() => navigate(ROUTES.STEP_EDIT.replace(':planId', planId).replace(':itineraryId', itineraryId).replace(':stepId', stepId))}
                 >
                     <EditIcon fontSize="small" />

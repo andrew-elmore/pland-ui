@@ -60,9 +60,9 @@ test.describe('Steps', () => {
         await page.getByRole('button', { name: /Preview Routes/ }).click();
         await pause(500);
 
-        await expect(page.getByText(/Route \d/)).toBeVisible({ timeout: 15000 });
+        await expect(page.getByText(/\d+ min/).first()).toBeVisible({ timeout: 15000 });
 
-        await page.getByText(/Route \d/).first().click();
+        await page.getByText(/\d+ min/).first().click();
         await pause(300);
 
         await page.getByRole('button', { name: 'Create' }).click();
@@ -102,8 +102,8 @@ test.describe('Steps', () => {
 
         await page.getByRole('button', { name: /Preview Routes/ }).click();
         await pause(500);
-        await expect(page.getByText(/Route \d/)).toBeVisible({ timeout: 15000 });
-        await page.getByText(/Route \d/).first().click();
+        await expect(page.getByText(/\d+ min/).first()).toBeVisible({ timeout: 15000 });
+        await page.getByText(/\d+ min/).first().click();
         await pause(300);
 
         await page.getByRole('button', { name: 'Create' }).click();
@@ -148,8 +148,8 @@ test.describe('Steps', () => {
 
         await page.getByRole('button', { name: /Preview Routes/ }).click();
         await pause(500);
-        await expect(page.getByText(/Route \d/)).toBeVisible({ timeout: 15000 });
-        await page.getByText(/Route \d/).first().click();
+        await expect(page.getByText(/\d+ min/).first()).toBeVisible({ timeout: 15000 });
+        await page.getByText(/\d+ min/).first().click();
         await pause(300);
 
         await page.getByRole('button', { name: 'Create' }).click();
@@ -199,8 +199,8 @@ test.describe('Steps', () => {
 
         await page.getByRole('button', { name: /Preview Routes/ }).click();
         await pause(500);
-        await expect(page.getByText(/Route \d/)).toBeVisible({ timeout: 15000 });
-        await page.getByText(/Route \d/).first().click();
+        await expect(page.getByText(/\d+ min/).first()).toBeVisible({ timeout: 15000 });
+        await page.getByText(/\d+ min/).first().click();
         await pause(300);
 
         await page.getByRole('button', { name: 'Create' }).click();
@@ -222,10 +222,7 @@ test.describe('Steps', () => {
         await page.getByRole('button', { name: 'Save' }).click();
         await pause(500);
 
-        await expect(page.getByText('Morning Commute')).toBeVisible({ timeout: 5000 });
-
-        await page.getByRole('button', { name: /back/i }).click();
-        await pause(500);
+        await expect(stepBlock.locator('Morning Commute')).toBeVisible({ timeout: 5000 });
 
         await stepBlock.click('Morning Commute');
         await expect(page).toHaveURL(/\/steps\//, { timeout: 5000 });
@@ -305,7 +302,10 @@ test.describe('Steps', () => {
         await locationPicker.setValue('Home');
 
         const startTime = TimeSelectorComponent(page, 'Start Time');
-        await startTime.setValue('Evening');
+        await startTime.setValue('Noon');
+
+        const endTime = TimeSelectorComponent(page, 'End Time');
+        await endTime.setValue('Evening');
 
         await page.getByRole('button', { name: 'Create' }).click();
         await pause(500);
@@ -383,20 +383,21 @@ test.describe('Steps', () => {
 
         await page.getByRole('button', { name: /Preview Routes/ }).click();
         await pause(500);
-        await expect(page.getByText(/Route \d/)).toBeVisible({ timeout: 15000 });
-        await page.getByText(/Route \d/).first().click();
+        await expect(page.getByText(/\d+ min/).first()).toBeVisible({ timeout: 15000 });
+        await page.getByText(/\d+ min/).first().click();
         await pause(300);
 
-        const durationHours = TextFieldComponent(page, 'Hours');
-        await durationHours.setValue('1');
-        const durationMin = TextFieldComponent(page, 'Min');
-        await durationMin.setValue('0');
-
-        const meetingParticipants = ParticipantPickerComponent(page);
-        await meetingParticipants.addByName('Alice Smith');
+        const durationHours = page.getByLabel('Hours', { exact: true }).last();
+        await durationHours.click();
+        await durationHours.fill('1');
+        await pause(400);
+        const durationMin = page.getByLabel('Min', { exact: true }).last();
+        await durationMin.click();
+        await durationMin.fill('0');
+        await pause(400);
 
         await page.getByRole('button', { name: 'Create' }).click();
-        await pause(500);
+        await expect(stepBlock.locator('Meeting')).toBeVisible({ timeout: 15000 });
 
         const visibleNames = await stepBlock.getVisibleStepNames();
         expect(visibleNames.length).toBeGreaterThanOrEqual(3);
@@ -616,8 +617,8 @@ test.describe('Steps', () => {
 
         await page.getByRole('button', { name: /Preview Routes/ }).click();
         await pause(500);
-        await expect(page.getByText(/Route \d/)).toBeVisible({ timeout: 15000 });
-        await page.getByText(/Route \d/).first().click();
+        await expect(page.getByText(/\d+ min/).first()).toBeVisible({ timeout: 15000 });
+        await page.getByText(/\d+ min/).first().click();
         await pause(300);
 
         await page.getByRole('button', { name: 'Create' }).click();

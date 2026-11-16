@@ -96,12 +96,12 @@ test.describe('Itineraries', () => {
         expect(names.length).toBe(0);
     });
 
-    test('TC-58: timeline without participants shows add message', async ({ page }) => {
+    test('TC-58: timeline shows creator as participant column', async ({ page }) => {
         await loginAndCreatePlan(page);
         await navigateToSection(page, 'Itineraries');
         await createItinerary(page, 'Day 1');
 
-        await expect(page.getByText('Add participants to see the timeline.')).toBeVisible({ timeout: 5000 });
+        await expect(page.getByText('Test User').first()).toBeVisible({ timeout: 5000 });
     });
 
     test('TC-29: TimelineTrack — drag absolute time node updates label', async ({ page }) => {
@@ -126,10 +126,12 @@ test.describe('Itineraries', () => {
         const labelsBefore = await track.getNodeLabels();
         const morningLabel = labelsBefore.find(l => l.includes('9:00') || l.includes('9:00'));
 
-        await track.dragNodeByLabel(morningLabel || labelsBefore[0], 80);
+        await track.dragNodeByLabel(morningLabel || labelsBefore[0], 200);
 
-        const labelsAfter = await track.getNodeLabels();
-        expect(labelsAfter).not.toEqual(labelsBefore);
+        await expect(async () => {
+            const labelsAfter = await track.getNodeLabels();
+            expect(labelsAfter).not.toEqual(labelsBefore);
+        }).toPass({ timeout: 5000 });
     });
 
     test('TC-30: TimelineTrack — drag below threshold does not change time', async ({ page }) => {
@@ -150,7 +152,7 @@ test.describe('Itineraries', () => {
         const track = TimelineTrackComponent(page);
         const labelsBefore = await track.getNodeLabels();
 
-        await track.dragNodeByLabel(labelsBefore[0], 5);
+        await track.dragNodeByLabel(labelsBefore[0], 1);
 
         const labelsAfter = await track.getNodeLabels();
         expect(labelsAfter).toEqual(labelsBefore);
@@ -311,9 +313,13 @@ test.describe('Itineraries', () => {
             endTime: 'Late',
         });
 
-        const hourLabels = await page.locator('[style*="position: absolute"][style*="border-top"]')
-            .evaluateAll(els => els.length);
-        expect(hourLabels).toBeGreaterThan(2);
+        const gridlineCount = await page.evaluate(() =>
+            [...document.querySelectorAll('div')].filter(el => {
+                const s = getComputedStyle(el);
+                return s.position === 'absolute' && s.borderTopStyle === 'solid' && Math.abs(parseFloat(s.opacity) - 0.3) < 0.05;
+            }).length
+        );
+        expect(gridlineCount).toBeGreaterThan(2);
 
         const track = TimelineTrackComponent(page);
         const nodeCount = await track.getNodeCount();

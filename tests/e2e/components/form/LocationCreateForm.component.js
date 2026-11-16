@@ -20,8 +20,18 @@ import pause from '../../utils/pause.js';
  * }}
  */
 export default function LocationCreateFormComponent(page) {
+    const nameInput = page.getByLabel('Name', { exact: true }).last();
     const fields = {
-        name: TextFieldComponent(page, 'Name'),
+        name: {
+            async setValue(value) {
+                await nameInput.click();
+                await nameInput.fill(String(value));
+                await pause(400);
+            },
+            async getValue() { return nameInput.inputValue(); },
+            async clear() { await nameInput.clear(); await pause(300); },
+            locator: nameInput,
+        },
         search: TextFieldComponent(page, 'Search places'),
     };
 
@@ -39,7 +49,7 @@ export default function LocationCreateFormComponent(page) {
         },
 
         async submit() {
-            await page.getByRole('button', { name: 'Add' }).click();
+            await page.getByRole('button', { name: 'Add', exact: true }).click();
             await pause(500);
         },
 
