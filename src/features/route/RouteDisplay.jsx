@@ -5,7 +5,8 @@ import {
     Chip,
     List,
 } from '@mui/material';
-import { APIProvider, Map, Polyline, Marker } from '@vis.gl/react-google-maps';
+import { useColorScheme } from '@mui/material/styles';
+import { APIProvider, ColorScheme, Map, Polyline, Marker } from '@vis.gl/react-google-maps';
 import Route from '../../domain/Route';
 import FitBounds from './FitBounds';
 import formatTime from '../../utils/formatTime';
@@ -15,6 +16,7 @@ import { getStepColor } from './routeColors';
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 const RouteDisplay = ({ route }) => {
+    const { colorScheme } = useColorScheme();
     const steps = useMemo(() => [...route.steps], [route]);
     const first = steps[0];
     const last = steps[steps.length - 1];
@@ -68,6 +70,7 @@ const RouteDisplay = ({ route }) => {
                         defaultCenter={center}
                         defaultZoom={10}
                         gestureHandling="cooperative"
+                        colorScheme={colorScheme === 'dark' ? ColorScheme.DARK : ColorScheme.LIGHT}
                         disableDefaultUI
                         zoomControl
                         style={{ width: '100%', height: '100%' }}
