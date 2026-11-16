@@ -40,8 +40,13 @@ npm install
 
 Create a `.env` file in the root directory (see `.env.example` for template):
 ```env
-API_URL=your_api_url
+VITE_API_URL=http://localhost:3001/api
+VITE_AUTH_MODE=clerk
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
+VITE_GOOGLE_MAPS_API_KEY=your_maps_key
 ```
+
+`VITE_CLERK_PUBLISHABLE_KEY` comes from the Clerk dashboard (API keys page). `VITE_AUTH_MODE=dev` skips Clerk for local QA and e2e runs (the API must also run with `AUTH_MODE=dev`); production builds refuse it.
 
 ### 3. Start Development Server
 
@@ -72,6 +77,33 @@ git push -u origin master
 
 **Alternative: Download ZIP**
 You can also simply download the boilerplate as a ZIP file from `https://github.com/Blackburn-Labs/proem-ui` using the "Download ZIP" button. This gives you a clean start without any git connection.
+
+## Authentication (Clerk)
+
+Sign-up and sign-in are handled by [Clerk](https://clerk.com) via `@clerk/react`:
+
+- `src/auth/AppProviders.jsx` wraps the app in `ClerkProvider`, themed through Clerk's `appearance` variables built from the MUI theme (`src/theme/clerkAppearance.js`).
+- `src/auth/AuthGate.jsx` shows the sign-in wall (Clerk sign-in / sign-up modals) to signed-out visitors.
+- `src/auth/ClerkTokenBridge.jsx` hands Clerk's `getToken()` to the axios client, which sends it to the API as `Authorization: Bearer <token>`.
+- `src/auth/ClerkSessionWatcher.jsx` clears the Redux stores when the signed-in user changes or signs out.
+- The app bar uses Clerk's `UserButton` for account management and sign-out.
+
+## Deployment (Render)
+
+`render.yaml` is a Render Blueprint that defines both environments as static sites:
+
+| Service | Branch | URL | `/api/*` rewrites to |
+|---|---|---|---|
+| `pland-ui` (production) | `master` | `https://pland-ui.onrender.com` | `https://pland-api.onrender.com/api/*` |
+| `pland-ui-test` (test) | `develop` | `https://pland-ui-test.onrender.com` | `https://pland-api-test.onrender.com/api/*` |
+
+- Build: `npm ci --ignore-scripts && npm run build`, publishing `dist`. `--ignore-scripts` skips the `postinstall` Playwright browser download, which only local e2e runs need.
+- Rewrites: `/api/*` to the matching environment's API (the API mounts every route under `/api`), everything else to `/index.html`.
+- Env: `NODE_VERSION`, `VITE_AUTH_MODE=clerk`, `VITE_API_URL=/api`, and the secrets `VITE_CLERK_PUBLISHABLE_KEY` (the shared Clerk development instance key) and `VITE_GOOGLE_MAPS_API_KEY`, set per service in the Render dashboard (`sync: false`).
+
+In Render, create one Blueprint from this repo; it creates both sites. Add both origins to the Clerk instance's allowed origins / domains.
+
+CI (`.github/workflows/ci.yml`) runs the unit tests and the production build on pushes to `master` and `develop` and on pull requests into either.
 
 ## Development Commands
 
@@ -192,7 +224,7 @@ To adapt this boilerplate for a different backend:
 1. Search for `[PARSE]` comments throughout the codebase
 2. Replace Parse.Query calls with your API client
 3. Update domain models to use your data layer
-4. Modify authentication flow in store/auth.js
+4. Modify authentication flow in src/auth/
 
 ## Customizing Your Application
 

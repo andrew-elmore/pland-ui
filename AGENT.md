@@ -78,6 +78,12 @@ React Components (UI layer)
 ### Environment Configuration
 Create `.env` file from `.env.example`:
 
+## Deploy
+
+`render.yaml` defines both Render static sites: `pland-ui` deploys from `master` (production) and rewrites `/api/*` to `https://pland-api.onrender.com/api/*`; `pland-ui-test` deploys from `develop` (test) and rewrites `/api/*` to `https://pland-api-test.onrender.com/api/*`. Both rewrite `/*` to `/index.html`, build with `npm ci --ignore-scripts && npm run build`, and take `VITE_CLERK_PUBLISHABLE_KEY` and `VITE_GOOGLE_MAPS_API_KEY` as `sync: false` secrets. Keep `render.yaml` free of comments.
+
+CI (`.github/workflows/ci.yml`) runs `npx vitest run` and `npm run build` on pushes to `master` and `develop` and on pull requests.
+
 ## Other Notes
 - All domain objects extend `./src/domain/BasicDomain.js`
 - ALWAYS run `/test` (`npm run lint` and `npm run test`) after all code changes and resolve any issues. For larger changes also run `npm run test:e2e`

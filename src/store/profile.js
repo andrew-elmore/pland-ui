@@ -4,9 +4,6 @@ const GET = 'GET_PROFILE';
 const UPDATE = 'UPDATE_PROFILE';
 const CLEAR = 'CLEAR_PROFILE';
 
-const LOGIN_USER_FULFILLED = 'LOGIN_USER_FULFILLED';
-const ADD_USER_FULFILLED = 'ADD_USER_FULFILLED';
-
 const initialState = {
     data: null,
     isLoading: false,
@@ -21,20 +18,6 @@ export function reducer(state = initialState, action) {
     case 'LOGOUT_USER_PENDING':
     case `${CLEAR}_PENDING`: {
         return initialState;
-    }
-
-    case LOGIN_USER_FULFILLED:
-    case ADD_USER_FULFILLED: {
-        if (!payload?.profile) {
-            return state;
-        }
-        return {
-            ...state,
-            data: payload.profile,
-            isLoading: false,
-            isLoaded: true,
-            error: null,
-        };
     }
 
     case `${GET}_PENDING`: {

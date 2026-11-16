@@ -50,7 +50,7 @@ navigate(ROUTES.CONTACT_DETAILS.replace(':contactId', contact.id));
 
 ## AppRouter structure
 
-All screen components are eagerly imported (no lazy loading). Authentication is handled by `AuthGuard` wrapping the router, not by per-route guards.
+All screen components are eagerly imported (no lazy loading). Authentication is handled by Clerk: `AuthGate` (`src/auth/AuthGate.jsx`) wraps the router in `AppContent` and shows the sign-in wall to signed-out users, not per-route guards.
 
 ```javascript
 import React from 'react';

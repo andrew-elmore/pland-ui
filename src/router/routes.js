@@ -13,9 +13,6 @@ export const ROUTES = {
     PLAN_PARTICIPANTS: '/plans/:planId/participants',
     PLAN_LOCATIONS: '/plans/:planId/locations',
 
-    LOGIN: '/login',
-    REGISTER: '/register',
-
     NOT_FOUND: '*',
 };
 

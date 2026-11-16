@@ -269,7 +269,7 @@ Store modules import pattern:
 
 ```javascript
 import { actions, selectors } from '../../store/organization';
-import { actions as authActions, selectors as authSelectors } from '../../store/auth';
+import { actions as uiActions } from '../../store/ui';
 ```
 
 Components in `common/` and `cards/` must be presentational (no Redux imports, no `useSelector`, no `useDispatch`). Redux-connected components belong in `system/`, `layout/`, or `inputs/` (when data-connected).

@@ -17,7 +17,6 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import { actions as planActions, selectors as planSelectors } from '../store/plan';
 import { actions as uiActions } from '../store/ui';
-import { selectors as authSelectors } from '../store/auth';
 import Plan from '../domain/Plan';
 import ROUTES from '../router/routes';
 import Form from '../components/common/Form';
@@ -25,7 +24,6 @@ import Form from '../components/common/Form';
 const HomeScreen = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const isAuthenticated = useSelector(authSelectors.isAuthenticated);
     const plans = useSelector(planSelectors.list);
     const { isLoading, isLoaded } = useSelector(planSelectors.listMeta);
     const isMutating = useSelector(planSelectors.isMutating);
@@ -34,10 +32,8 @@ const HomeScreen = () => {
     const [working, setWorking] = useState(() => new Plan());
 
     useEffect(() => {
-        if (isAuthenticated) {
-            dispatch(planActions.list());
-        }
-    }, [dispatch, isAuthenticated]);
+        dispatch(planActions.list());
+    }, [dispatch]);
 
     const handleOpenCreate = () => {
         setWorking(new Plan());
@@ -51,17 +47,6 @@ const HomeScreen = () => {
     const handleCreate = () => {
         dispatch(planActions.create({ name: working.name, description: working.description }));
     };
-
-    if (!isAuthenticated) {
-        return (
-            <Container maxWidth="sm">
-                <Box sx={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 2 }}>
-                    <Typography variant="h4" sx={{ fontWeight: 600 }}>Welcome to Pland</Typography>
-                    <Typography variant="body1" color="text.secondary">Sign in to start creating plans.</Typography>
-                </Box>
-            </Container>
-        );
-    }
 
     return (
         <Container maxWidth="md">

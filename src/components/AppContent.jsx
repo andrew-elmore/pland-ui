@@ -1,22 +1,12 @@
 import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import AppRouter from '../router/AppRouter';
 import AppBar from './layout/AppBar';
-import { LoadingOverlay } from './common/LoadingOverlay';
-import { actions, selectors } from '../store/auth';
+import AuthGate from '../auth/AuthGate';
+import ClerkTokenBridge from '../auth/ClerkTokenBridge';
+import ClerkSessionWatcher from '../auth/ClerkSessionWatcher';
+import { isDevAuth } from '../auth/authMode';
 
 const AppContent = () => {
-    const dispatch = useDispatch();
-    const isLoading = useSelector(selectors.isLoading);
-    const isLoaded = useSelector(selectors.isLoaded);
-
-    useEffect(() => {
-        const token = localStorage.getItem('pland_token');
-        if (token) {
-            dispatch(actions.restore());
-        }
-    }, [dispatch]);
-
     useEffect(() => {
         if (window.google?.maps?.places) return;
         if (document.querySelector('script[src*="maps.googleapis.com"]')) return;
@@ -28,9 +18,12 @@ const AppContent = () => {
 
     return (
         <>
-            <LoadingOverlay open={isLoading && !isLoaded} />
+            {!isDevAuth() && <ClerkTokenBridge />}
+            {!isDevAuth() && <ClerkSessionWatcher />}
             <AppBar />
-            <AppRouter />
+            <AuthGate>
+                <AppRouter />
+            </AuthGate>
         </>
     );
 };

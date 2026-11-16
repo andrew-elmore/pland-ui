@@ -1,6 +1,6 @@
 import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { Show, SignInButton, UserButton } from '@clerk/react';
 import {
     AppBar as MuiAppBar,
     Box,
@@ -9,31 +9,42 @@ import {
     Typography,
     Toolbar,
 } from '@mui/material';
-import { actions as authActions, selectors as authSelectors } from '../../store/auth';
-import { selectors as profileSelectors } from '../../store/profile';
-import ROUTES from '../../router/routes';
+import { isDevAuth } from '../../auth/authMode';
+import { devUser } from '../../auth/devUser';
+
+const DevAccount = () => {
+    const { firstName, lastName, email } = devUser();
+    return (
+        <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: 'text.primary' }}>
+            {`${firstName} ${lastName}`.trim() || email}
+        </Typography>
+    );
+};
+
+const ClerkAccount = () => (
+    <>
+        <Show when="signed-in">
+            <UserButton showName />
+        </Show>
+        <Show when="signed-out">
+            <SignInButton mode="modal">
+                <Button
+                    variant="outlined"
+                    size="small"
+                    sx={{
+                        borderRadius: '20px',
+                        textTransform: 'none',
+                        fontWeight: 600,
+                    }}
+                >
+                    Login
+                </Button>
+            </SignInButton>
+        </Show>
+    </>
+);
 
 const AppBar = () => {
-    const dispatch = useDispatch();
-    const navigate = useNavigate();
-
-    const isAuthenticated = useSelector(authSelectors.isAuthenticated);
-    const user = useSelector(authSelectors.me);
-    const profileFirstName = useSelector(profileSelectors.firstName);
-    const profileLastName = useSelector(profileSelectors.lastName);
-
-    const displayName = profileFirstName
-        ? `${profileFirstName} ${profileLastName}`.trim()
-        : user?.email ?? '';
-
-    const handleLogout = () => {
-        dispatch(authActions.logout());
-    };
-
-    const handleLoginClick = () => {
-        navigate(ROUTES.LOGIN);
-    };
-
     return (
         <MuiAppBar
             position="sticky"
@@ -68,44 +79,7 @@ const AppBar = () => {
                     </Box>
 
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        {isAuthenticated ? (
-                            <>
-                                <Typography
-                                    sx={{
-                                        fontSize: '0.875rem',
-                                        fontWeight: 600,
-                                        color: 'text.primary',
-                                    }}
-                                >
-                                    {displayName}
-                                </Typography>
-                                <Button
-                                    variant="outlined"
-                                    size="small"
-                                    onClick={handleLogout}
-                                    sx={{
-                                        borderRadius: '20px',
-                                        textTransform: 'none',
-                                        fontWeight: 600,
-                                    }}
-                                >
-                                    Logout
-                                </Button>
-                            </>
-                        ) : (
-                            <Button
-                                variant="outlined"
-                                size="small"
-                                onClick={handleLoginClick}
-                                sx={{
-                                    borderRadius: '20px',
-                                    textTransform: 'none',
-                                    fontWeight: 600,
-                                }}
-                            >
-                                Login
-                            </Button>
-                        )}
+                        {isDevAuth() ? <DevAccount /> : <ClerkAccount />}
                     </Box>
                 </Toolbar>
             </Container>

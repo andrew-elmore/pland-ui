@@ -14,8 +14,6 @@ import RouteDetailsScreen from '../screens/route/RouteDetailsScreen';
 import GroupScreen from '../screens/group/GroupScreen';
 import ParticipantScreen from '../screens/participant/ParticipantScreen';
 import LocationScreen from '../screens/location/LocationScreen';
-import LoginScreen from '../screens/auth/LoginScreen';
-import RegisterScreen from '../screens/auth/RegisterScreen';
 
 const AppRouter = () => {
     return (
@@ -34,8 +32,6 @@ const AppRouter = () => {
                 <Route path="participants" element={<ParticipantScreen />} />
                 <Route path="locations" element={<LocationScreen />} />
             </Route>
-            <Route path={ROUTES.LOGIN} element={<LoginScreen />} />
-            <Route path={ROUTES.REGISTER} element={<RegisterScreen />} />
             <Route path={ROUTES.NOT_FOUND} element={<Navigate to={ROUTES.HOME} replace />} />
         </Routes>
     );

@@ -10,32 +10,25 @@ Flows extract repeated test setup and common user paths so specs stay focused on
 
 ```javascript
 import { expect } from '@playwright/test';
-import LoginFormComponent from '../components/LoginForm.component.js';
-import RegisterFormComponent from '../components/RegisterForm.component.js';
 
 const defaultUser = {
     firstName: 'Test',
     lastName: 'User',
     email: 'test@e2e.local',
-    password: 'Password123!',
 };
 
 export async function loginOrRegister(page, user = defaultUser) {
-    await page.goto('/login');
-    const loginForm = LoginFormComponent(page);
-    await loginForm.fillAndSubmit({ email: user.email, password: user.password });
-
-    const loggedIn = await page.getByText('My Plans').isVisible({ timeout: 3000 }).catch(() => false);
-
-    if (!loggedIn) {
-        await page.goto('/register');
-        const registerForm = RegisterFormComponent(page);
-        await registerForm.fillAndSubmit(user);
-    }
-
+    const identity = { id: `dev_${user.email}`, ...user };
+    await page.addInitScript(
+        ([key, value]) => window.localStorage.setItem(key, value),
+        ['pland_dev_user', JSON.stringify(identity)],
+    );
+    await page.goto('/');
     await expect(page.getByText('My Plans')).toBeVisible({ timeout: 10000 });
 }
 ```
+
+E2E runs use dev auth (`VITE_AUTH_MODE=dev` in the UI, `AUTH_MODE=dev` in the API, set by `e2e.sh`), so `loginOrRegister` signs in by setting the dev identity instead of driving Clerk's hosted UI.
 
 ## Rules
 
@@ -53,7 +46,7 @@ export async function loginOrRegister(page, user = defaultUser) {
 Create a flow when:
 
 - Two or more specs need the same multi-step sequence
-- A sequence involves conditional logic (e.g., login, fall back to register)
+- A sequence involves conditional logic or environment setup (e.g., signing in as a dev-auth user)
 - A setup sequence is long enough that inlining it obscures the spec's intent
 
 Do not create a flow for:

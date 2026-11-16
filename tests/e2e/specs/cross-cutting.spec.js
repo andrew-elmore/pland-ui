@@ -21,9 +21,9 @@ const timestamp = () => Date.now();
 
 test.describe('Cross-Cutting', () => {
     test('TC-62: form validation — disabled submit buttons', async ({ page }) => {
-        await loginAndCreatePlan(page);
+        const planName = await loginAndCreatePlan(page);
 
-        await page.getByRole('button', { name: /back/i }).click();
+        await page.getByRole('link', { name: 'Pland' }).click();
         await expect(page.getByText('My Plans')).toBeVisible({ timeout: 5000 });
 
         await page.getByRole('button', { name: 'New Plan' }).click();
@@ -32,51 +32,51 @@ test.describe('Cross-Cutting', () => {
         await TextFieldComponent(page, 'Plan Name').setValue('Validation Test');
         await expect(page.getByRole('button', { name: 'Create' })).toBeEnabled();
         await page.keyboard.press('Escape');
-        await pause(300);
+        await expect(page.locator('[role="dialog"]')).not.toBeVisible({ timeout: 5000 });
 
-        await page.getByText('Test Plan').click();
+        await page.getByText(planName).first().click();
         await pause(500);
 
         await navigateToSection(page, 'Participants');
-        await page.getByRole('button', { name: 'Add' }).click();
+        await page.getByRole('button', { name: 'Add', exact: true }).click();
         await pause(500);
-        await expect(page.getByRole('button', { name: 'Add' }).last()).toBeDisabled();
+        await expect(page.locator('[role="dialog"]').getByRole('button', { name: 'Add' })).toBeDisabled();
         const participantForm = ParticipantFormComponent(page);
         await participantForm.fields.firstName.setValue('Val');
         await participantForm.fields.email.setValue('val@test.com');
-        await expect(page.getByRole('button', { name: 'Add' }).last()).toBeEnabled();
+        await expect(page.locator('[role="dialog"]').getByRole('button', { name: 'Add' })).toBeEnabled();
         await page.keyboard.press('Escape');
-        await pause(300);
+        await expect(page.locator('[role="dialog"]')).not.toBeVisible({ timeout: 5000 });
 
         await navigateToSection(page, 'Groups');
-        await page.getByRole('button', { name: 'Add' }).click();
+        await page.getByRole('button', { name: 'Add', exact: true }).click();
         await pause(500);
-        await expect(page.getByRole('button', { name: 'Add' }).last()).toBeDisabled();
+        await expect(page.locator('[role="dialog"]').getByRole('button', { name: 'Add' })).toBeDisabled();
         const groupForm = GroupFormComponent(page);
         await groupForm.fields.name.setValue('Test Group');
-        await expect(page.getByRole('button', { name: 'Add' }).last()).toBeEnabled();
+        await expect(page.locator('[role="dialog"]').getByRole('button', { name: 'Add' })).toBeEnabled();
         await page.keyboard.press('Escape');
-        await pause(300);
+        await expect(page.locator('[role="dialog"]')).not.toBeVisible({ timeout: 5000 });
 
         await navigateToSection(page, 'Locations');
-        await page.getByRole('button', { name: 'Add' }).click();
+        await page.getByRole('button', { name: 'Add', exact: true }).click();
         await pause(500);
-        await expect(page.getByRole('button', { name: 'Add' }).last()).toBeDisabled();
+        await expect(page.locator('[role="dialog"]').getByRole('button', { name: 'Add' })).toBeDisabled();
         const locationForm = LocationFormComponent(page);
         await locationForm.fields.name.setValue('Test Location');
-        await expect(page.getByRole('button', { name: 'Add' }).last()).toBeEnabled();
+        await expect(page.locator('[role="dialog"]').getByRole('button', { name: 'Add' })).toBeEnabled();
         await page.keyboard.press('Escape');
-        await pause(300);
+        await expect(page.locator('[role="dialog"]')).not.toBeVisible({ timeout: 5000 });
 
         await navigateToSection(page, 'Times');
-        await page.getByRole('button', { name: 'Add' }).click();
+        await page.getByRole('button', { name: 'Add', exact: true }).click();
         await pause(500);
         await expect(page.getByRole('button', { name: 'Create' })).toBeDisabled();
         const timeForm = TimeFormComponent(page);
         await timeForm.fields.datetime.setValue('2026-06-15T09:00');
         await expect(page.getByRole('button', { name: 'Create' })).toBeEnabled();
         await page.keyboard.press('Escape');
-        await pause(300);
+        await expect(page.locator('[role="dialog"]')).not.toBeVisible({ timeout: 5000 });
     });
 
     test('TC-63: single dialog slot', async ({ page }) => {
@@ -120,7 +120,7 @@ test.describe('Cross-Cutting', () => {
 
         await navigateToSection(page, 'Locations');
         await addLocation(page, { name: 'Home', search: '123 Main St' });
-        await addLocation(page, { name: 'Beach', search: 'Santa Monica Beach' });
+        await addLocation(page, { name: 'Beach', search: 'Coney Island Beach' });
 
         await navigateToSection(page, 'Times');
         await addAbsoluteTime(page, { label: 'Departure', datetime: '2026-06-15T08:00' });
@@ -137,15 +137,15 @@ test.describe('Cross-Cutting', () => {
         await TextFieldComponent(page, 'Name').setValue('Morning at Beach');
         await ParticipantPickerComponent(page).addByName('Alice Smith');
         await LocationPickerComponent(page, 'Location').setValue('Beach');
-        const fromTime = TimeSelectorComponent(page, 'From');
-        await fromTime.setValue('Departure');
-        const tillTime = TimeSelectorComponent(page, 'Till');
-        await tillTime.setValue('Arrival Buffer');
-        await page.getByRole('button', { name: 'Create' }).click();
-        await pause(1000);
+        const startTime = TimeSelectorComponent(page, 'Start Time');
+        await startTime.setValue('Departure');
+        const endTime = TimeSelectorComponent(page, 'End Time');
+        await endTime.setValue('Arrival Buffer');
+        await page.getByRole('button', { name: 'Create' }).last().click();
+        await expect(page.getByRole('button', { name: 'Add Step' })).toBeVisible({ timeout: 10000 });
 
         const stepBlocks = StepBlockComponent(page);
-        await expect(await stepBlocks.isVisible('Morning at Beach')).toBeTruthy();
+        await expect(stepBlocks.locator('Morning at Beach')).toBeVisible({ timeout: 5000 });
 
         await page.getByRole('button', { name: 'Add Step' }).click();
         await pause(500);
@@ -157,30 +157,35 @@ test.describe('Cross-Cutting', () => {
         await LocationPickerComponent(page, 'Destination').setValue('Beach');
         await TimeSelectorComponent(page, /Departure Time|Arrival Time/).setValue('Departure');
         await page.getByRole('button', { name: /Preview Routes/ }).click();
-        await expect(page.getByText(/Route \d/)).toBeVisible({ timeout: 15000 });
-        await page.getByText(/Route \d/).first().click();
-        await pause(300);
+        await expect(page.getByText(/\d+ min/).first()).toBeVisible({ timeout: 15000 });
+        await page.getByText(/\d+ min/).first().click();
+        await pause(500);
         await page.getByRole('button', { name: 'Create' }).click();
         await pause(1000);
+        await expect(page.getByRole('tab', { name: 'Beach Trip' })).toBeVisible({ timeout: 15000 });
 
         const stepNames = await stepBlocks.getVisibleStepNames();
         expect(stepNames.length).toBeGreaterThanOrEqual(2);
 
         await stepBlocks.click('Morning at Beach');
+        await expect(page).toHaveURL(/\/steps\//, { timeout: 5000 });
         await expect(page.getByText('Morning at Beach')).toBeVisible({ timeout: 5000 });
+
+        await page.getByRole('button', { name: /edit/i }).click();
+        await pause(500);
 
         const nameField = TextFieldComponent(page, 'Name');
         await nameField.clear();
         await nameField.setValue('Beach Morning');
         await page.getByRole('button', { name: 'Save' }).click();
-        await pause(1000);
+        await pause(500);
 
-        await expect(await stepBlocks.isVisible('Beach Morning')).toBeTruthy();
+        await expect(stepBlocks.locator('Beach Morning')).toBeVisible({ timeout: 5000 });
 
         const sections = ['Participants', 'Locations', 'Groups', 'Times', 'Routes', 'Itineraries'];
         for (const section of sections) {
             await navigateToSection(page, section);
-            await expect(page.getByText(section)).toBeVisible({ timeout: 5000 });
+            await expect(page.getByText(section).first()).toBeVisible({ timeout: 5000 });
         }
     });
 });

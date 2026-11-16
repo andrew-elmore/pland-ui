@@ -9,7 +9,7 @@ tests/e2e/
 ├── components/
 │   ├── input/     # One wrapper per MUI input type (TextField, Autocomplete, etc.)
 │   └── form/      # One wrapper per app form, composes input components
-├── flows/         # Reusable multi-step user journeys (login, create plan, etc.)
+├── flows/         # Reusable multi-step user journeys (sign in, create plan, etc.)
 ├── specs/         # Test files — the only place test() blocks live
 └── utils/         # Shared infrastructure (pause, config helpers)
 ```
@@ -52,9 +52,9 @@ Pause values are base milliseconds passed to `pause()`. Choose values that feel 
 Prefer Playwright's semantic locators in this order:
 
 1. `page.getByLabel('Email')` — for labeled inputs
-2. `page.getByRole('button', { name: 'Login' })` — for buttons and interactive elements
+2. `page.getByRole('button', { name: 'New Plan' })` — for buttons and interactive elements
 3. `page.getByText('My Plans')` — for assertions on visible text
-4. `page.locator('form')` — scoping to resolve ambiguity (e.g., two "Login" buttons)
+4. `page.locator('form')` — scoping to resolve ambiguity (e.g., two "Create" buttons)
 
 Never use CSS class selectors from MUI (`.MuiButton-root`). They are implementation details and break across versions.
 
