@@ -1,11 +1,14 @@
 import React from 'react';
 import { ClerkProvider } from '@clerk/react';
-import clerkAppearance from '../theme/clerkAppearance';
+import { useColorScheme } from '@mui/material/styles';
+import clerkAppearanceFor from '../theme/clerkAppearance';
 import { isDevAuth } from './authMode';
 
 const CLERK_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 export default function AppProviders({ children }) {
+    const { colorScheme } = useColorScheme();
+
     if (isDevAuth()) return children;
 
     if (!CLERK_KEY) {
@@ -19,7 +22,7 @@ export default function AppProviders({ children }) {
         <ClerkProvider
             publishableKey={CLERK_KEY}
             afterSignOutUrl="/"
-            appearance={clerkAppearance}
+            appearance={clerkAppearanceFor(colorScheme)}
         >
             {children}
         </ClerkProvider>

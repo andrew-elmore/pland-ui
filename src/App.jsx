@@ -5,20 +5,26 @@ import { BrowserRouter } from 'react-router-dom';
 import AppContent from './components/AppContent';
 import AppProviders from './auth/AppProviders';
 import { store } from './store';
-import theme from './theme/theme';
+import theme, { COLOR_SCHEME_STORAGE_KEY, DEFAULT_MODE, MODE_STORAGE_KEY } from './theme/theme';
 
 function App() {
     return (
-        <AppProviders>
-            <Provider store={store}>
-                <ThemeProvider theme={theme}>
-                    <CssBaseline />
+        <ThemeProvider
+            theme={theme}
+            defaultMode={DEFAULT_MODE}
+            modeStorageKey={MODE_STORAGE_KEY}
+            colorSchemeStorageKey={COLOR_SCHEME_STORAGE_KEY}
+            noSsr
+        >
+            <CssBaseline enableColorScheme />
+            <AppProviders>
+                <Provider store={store}>
                     <BrowserRouter>
                         <AppContent />
                     </BrowserRouter>
-                </ThemeProvider>
-            </Provider>
-        </AppProviders>
+                </Provider>
+            </AppProviders>
+        </ThemeProvider>
     );
 }
 

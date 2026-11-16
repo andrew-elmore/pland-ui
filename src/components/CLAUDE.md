@@ -78,6 +78,14 @@ Theme function only when the value requires theme object access:
 zIndex: (theme) => theme.zIndex.drawer + 1,
 ```
 
+The app has light and dark mode, so never hardcode colors (hex, `rgb()`, `'white'`, `'#fff'`). Colors a token path can't express (gradients, shadows) come from `theme.vars` in a theme function, so they follow the active scheme:
+
+```javascript
+boxShadow: (theme) => `0 0 8px 2px rgba(${theme.vars.palette.primary.mainChannel} / 0.4)`,
+```
+
+Third-party widgets that need a concrete scheme (e.g. Google Maps `colorScheme`) read it from `useColorScheme()` (`@mui/material/styles`). See `src/theme/CLAUDE.md`.
+
 Direct theme access via `useTheme()` only for breakpoints/responsive logic:
 
 ```javascript

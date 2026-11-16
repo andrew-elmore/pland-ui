@@ -6,7 +6,8 @@ import {
     ListItemText,
     ListItemButton,
 } from '@mui/material';
-import { APIProvider, Map, Polyline, Marker } from '@vis.gl/react-google-maps';
+import { useColorScheme } from '@mui/material/styles';
+import { APIProvider, ColorScheme, Map, Polyline, Marker } from '@vis.gl/react-google-maps';
 import FitBounds from './FitBounds';
 import Route from '../../domain/Route';
 import DirectionStepItem from './DirectionStepItem';
@@ -16,6 +17,7 @@ import formatDistance from '../../utils/formatDistance';
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 const RouteOptionsPanel = ({ options, selectedIdx, onSelect, departureTime }) => {
+    const { colorScheme } = useColorScheme();
     const selected = selectedIdx != null ? options[selectedIdx] : null;
 
     const steps = useMemo(() => {
@@ -99,6 +101,7 @@ const RouteOptionsPanel = ({ options, selectedIdx, onSelect, departureTime }) =>
                             defaultCenter={{ lat: (first.startLat + last.endLat) / 2, lng: (first.startLng + last.endLng) / 2 }}
                             defaultZoom={10}
                             gestureHandling="cooperative"
+                            colorScheme={colorScheme === 'dark' ? ColorScheme.DARK : ColorScheme.LIGHT}
                             disableDefaultUI
                             zoomControl
                             style={{ width: '100%', height: '100%' }}

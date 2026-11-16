@@ -267,10 +267,10 @@ const TimelineTrack = ({ times, steps, timeToY, totalHeight, rangeStart, rangeEn
                                 justifyContent: 'center',
                                 cursor: isDragging ? 'grabbing' : 'grab',
                                 transition: isDragging ? 'none' : 'border-color 0.15s, box-shadow 0.15s',
-                                boxShadow: isDragging ? '0 0 8px 2px rgba(156,39,176,0.4)' : 'none',
+                                boxShadow: (theme) => (isDragging ? `0 0 8px 2px rgba(${theme.vars.palette.primary.mainChannel} / 0.4)` : 'none'),
                                 '&:hover': {
                                     borderColor: 'primary.main',
-                                    boxShadow: '0 0 4px 1px rgba(156,39,176,0.2)',
+                                    boxShadow: (theme) => `0 0 4px 1px rgba(${theme.vars.palette.primary.mainChannel} / 0.2)`,
                                 },
                             }}
                         >
