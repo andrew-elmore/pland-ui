@@ -3,12 +3,12 @@ import { Box, Typography, ListItem } from '@mui/material';
 import DirectionsWalkIcon from '@mui/icons-material/DirectionsWalk';
 import formatTime from '../../utils/formatTime';
 import formatDistance from '../../utils/formatDistance';
-import { WALK_COLOR } from './routeColors';
+import { getStepColor } from './routeColors';
 
 const DirectionStepItem = ({ step, index, times, fare }) => {
     const td = step.transitDetails;
     const isTransit = step.travelMode === 'TRANSIT' && td;
-    const lineColor = isTransit ? td.lineColor : WALK_COLOR;
+    const lineColor = getStepColor(step);
 
     const primaryText = isTransit
         ? `Take ${td.lineShortName || td.lineName} from ${td.departureStop} to ${td.arrivalStop}`
@@ -25,7 +25,7 @@ const DirectionStepItem = ({ step, index, times, fare }) => {
                         height: 22,
                         borderRadius: '4px',
                         backgroundColor: lineColor,
-                        color: td.lineTextColor || '#fff',
+                        color: td.lineTextColor || 'common.white',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -36,7 +36,7 @@ const DirectionStepItem = ({ step, index, times, fare }) => {
                         {td.lineShortName?.replace(/\s*Line$/i, '') || index + 1}
                     </Box>
                 ) : (
-                    <DirectionsWalkIcon sx={{ fontSize: 18, color: WALK_COLOR }} />
+                    <DirectionsWalkIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
                 )}
             </Box>
 

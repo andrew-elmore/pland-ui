@@ -1,11 +1,11 @@
 import React, { useMemo } from 'react';
 import { Box, Typography, IconButton } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { getStepColor, DRIVE_COLOR } from '../route/routeColors';
+import { getStepColor, DRIVE_COLOR, WALK_STRIPE_COLOR, WAIT_STRIPE_COLOR } from '../route/routeColors';
 
 const BAR_WIDTH = 10;
-const WALK_PATTERN = 'repeating-linear-gradient(45deg, #42a5f5, #42a5f5 2px, #fff 2px, #fff 4px)';
-const WAIT_PATTERN = 'repeating-linear-gradient(-45deg, #4caf50, #4caf50 2px, #fff 2px, #fff 4px)';
+const WALK_PATTERN = (theme) => `repeating-linear-gradient(45deg, ${WALK_STRIPE_COLOR}, ${WALK_STRIPE_COLOR} 2px, ${theme.vars.palette.background.paper} 2px, ${theme.vars.palette.background.paper} 4px)`;
+const WAIT_PATTERN = (theme) => `repeating-linear-gradient(-45deg, ${WAIT_STRIPE_COLOR}, ${WAIT_STRIPE_COLOR} 2px, ${theme.vars.palette.background.paper} 2px, ${theme.vars.palette.background.paper} 4px)`;
 
 const buildSegments = (step) => {
     if (!step.route || !step.route.steps?.length) {
@@ -106,7 +106,7 @@ const StepBlock = ({ step, top, actualHeight, hasAbove, hasBelow, isHovered, onH
                 zIndex: isHovered ? 2 : 1,
                 borderColor: isHovered ? 'primary.main' : 'divider',
                 backgroundColor: needsExpansion ? 'background.paper' : isHovered ? 'action.selected' : 'action.hover',
-                boxShadow: isHovered ? '0 0 8px 2px rgba(144,202,249,0.4)' : 'none',
+                boxShadow: (theme) => (isHovered ? `0 0 8px 2px rgba(${theme.vars.palette.primary.mainChannel} / 0.4)` : 'none'),
                 cursor: 'pointer',
                 px: 1,
                 transition: 'border-color 0.15s, background-color 0.15s, box-shadow 0.15s, height 0.15s',

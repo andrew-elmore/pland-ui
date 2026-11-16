@@ -5,9 +5,9 @@ export const LoadingOverlay = ({ open, message = 'Processing...' }) => {
     return (
         <Backdrop
             sx={{
-                color: '#fff',
+                color: 'scrim.contrastText',
                 zIndex: (theme) => theme.zIndex.drawer + 1,
-                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                backgroundColor: 'scrim.main',
             }}
             open={open}
         >

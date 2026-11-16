@@ -1,6 +1,7 @@
 export const WALK_COLOR = '#9e9e9e';
 export const DRIVE_COLOR = '#42a5f5';
-export const WAIT_COLOR = '#616161';
+export const WALK_STRIPE_COLOR = '#42a5f5';
+export const WAIT_STRIPE_COLOR = '#4caf50';
 export const DEFAULT_TRANSIT_COLOR = '#ab47bc';
 
 export const getStepColor = (step) => {

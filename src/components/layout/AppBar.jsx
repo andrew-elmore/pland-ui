@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import { isDevAuth } from '../../auth/authMode';
 import { devUser } from '../../auth/devUser';
+import ColorModeMenu from './ColorModeMenu';
 
 const DevAccount = () => {
     const { firstName, lastName, email } = devUser();
@@ -79,6 +80,7 @@ const AppBar = () => {
                     </Box>
 
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <ColorModeMenu />
                         {isDevAuth() ? <DevAccount /> : <ClerkAccount />}
                     </Box>
                 </Toolbar>

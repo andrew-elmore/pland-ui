@@ -8,6 +8,24 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <title>Pland</title>
+    <style>
+      html.light { color-scheme: light; background-color: #f5f7f4; }
+      html.dark { color-scheme: dark; background-color: #121212; }
+    </style>
+    <script id="pland-color-scheme-init">
+      (function () {
+        var mode = 'system';
+        try {
+          mode = localStorage.getItem('pland-mode') || 'system';
+        } catch (e) {
+          mode = 'system';
+        }
+        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var scheme = mode === 'dark' || (mode !== 'light' && prefersDark) ? 'dark' : 'light';
+        document.documentElement.classList.remove('light', 'dark');
+        document.documentElement.classList.add(scheme);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
