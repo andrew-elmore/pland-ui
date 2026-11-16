@@ -14,7 +14,7 @@ import pause from '../../utils/pause.js';
  * }}
  */
 export default function TextFieldComponent(page, label) {
-    const input = page.getByLabel(label);
+    const input = page.getByLabel(label, { exact: true });
 
     return {
         async setValue(value) {

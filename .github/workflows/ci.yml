@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [master, develop]
+  pull_request:
+    branches: [master, develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.21.1
+          cache: npm
+
+      - run: npm ci --ignore-scripts
+
+      - name: Unit tests
+        run: npx vitest run
+
+      - name: Build
+        env:
+          VITE_AUTH_MODE: clerk
+          VITE_API_URL: /api
+        run: npm run build

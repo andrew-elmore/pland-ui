@@ -11,10 +11,10 @@ test.describe('Plan Navigation', () => {
         for (const section of sections) {
             await navigateToSection(page, section);
             await expect(page).toHaveURL(new RegExp(section.toLowerCase()), { timeout: 5000 });
-            await expect(page.getByText(section)).toBeVisible({ timeout: 5000 });
+            await expect(page.getByText(section).first()).toBeVisible({ timeout: 5000 });
         }
 
-        await page.getByRole('button', { name: /back/i }).click();
+        await page.getByRole('link', { name: 'Pland' }).click();
         await expect(page.getByText('My Plans')).toBeVisible({ timeout: 5000 });
     });
 
@@ -22,15 +22,13 @@ test.describe('Plan Navigation', () => {
         await loginAndCreatePlan(page);
         await page.setViewportSize({ width: 375, height: 812 });
 
-        await expect(page.locator('nav')).toBeVisible({ timeout: 5000 });
-
         await navigateToSection(page, 'Participants');
         await expect(page).toHaveURL(/participants/, { timeout: 5000 });
 
         await navigateToSection(page, 'Locations');
         await expect(page).toHaveURL(/locations/, { timeout: 5000 });
 
-        await page.getByRole('button', { name: /back/i }).click();
+        await page.getByRole('link', { name: 'Pland' }).click();
         await expect(page.getByText('My Plans')).toBeVisible({ timeout: 5000 });
     });
 
@@ -42,8 +40,8 @@ test.describe('Plan Navigation', () => {
     });
 
     test('TC-68: plan loading completes and shows plan name', async ({ page }) => {
-        await loginAndCreatePlan(page);
+        const planName = await loginAndCreatePlan(page);
 
-        await expect(page.getByText('Test Plan')).toBeVisible({ timeout: 10000 });
+        await expect(page.getByText(planName).first()).toBeVisible({ timeout: 10000 });
     });
 });

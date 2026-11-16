@@ -5,8 +5,7 @@ import pause from '../utils/pause.js';
 export async function createItinerary(page, name = 'Day 1') {
     const createBtn = page.getByRole('button', { name: 'Create itinerary' });
     const plusTab = page.getByRole('tab').last();
-    const trigger = await createBtn.isVisible().catch(() => false) ? createBtn : plusTab;
-    await trigger.click();
+    await createBtn.or(plusTab).click();
     await pause(500);
     const form = ItineraryFormComponent(page);
     await form.fillAndSubmit({ name });

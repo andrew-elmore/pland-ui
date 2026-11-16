@@ -26,14 +26,13 @@ import ParticipantCreateFormComponent from '../form/ParticipantCreateForm.compon
  * }}
  */
 export default function ParticipantPickerComponent(page) {
-    const input = page.getByLabel('Participants');
-    const addButton = input.locator('..').locator('..').locator('..').getByRole('button').last();
+    const input = page.getByRole('combobox', { name: 'Participants' });
+    const addButton = input.locator('..').locator('..').locator('..').locator('..').getByRole('button').last();
 
     return {
         async addByName(name) {
             await input.click();
-            await input.fill(name);
-            await pause(400);
+            await pause(300);
             await page.getByRole('option', { name }).first().click();
             await pause(300);
             await page.keyboard.press('Escape');

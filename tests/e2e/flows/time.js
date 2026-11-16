@@ -3,7 +3,7 @@ import TimeFormComponent from '../components/form/TimeForm.component.js';
 import pause from '../utils/pause.js';
 
 export async function addAbsoluteTime(page, data) {
-    await page.getByRole('button', { name: 'Add' }).click();
+    await page.getByRole('button', { name: 'Add', exact: true }).click();
     await pause(500);
     const form = TimeFormComponent(page);
     await form.fillAndSubmit(data);
@@ -13,7 +13,7 @@ export async function addAbsoluteTime(page, data) {
 }
 
 export async function addDependentTime(page, data) {
-    await page.getByRole('button', { name: 'Add' }).click();
+    await page.getByRole('button', { name: 'Add', exact: true }).click();
     await pause(500);
     const form = TimeFormComponent(page);
     await form.fillAndSubmit(data);

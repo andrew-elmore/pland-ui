@@ -91,6 +91,7 @@ const StepBlock = ({ step, top, actualHeight, hasAbove, hasBelow, isHovered, onH
 
     return (
         <Box
+            data-step-name={step.name}
             onClick={() => onClick(step)}
             onMouseEnter={() => onHover(step.id)}
             onMouseLeave={() => onHover(null)}

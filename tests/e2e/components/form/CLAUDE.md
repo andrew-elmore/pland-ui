@@ -8,22 +8,22 @@ One component per app form. Composes input components into a data-driven interfa
 import TextFieldComponent from '../input/TextField.component.js';
 import pause from '../../utils/pause.js';
 
-export default function LoginFormComponent(page) {
+export default function PlanCreateFormComponent(page) {
     const fields = {
-        email: TextFieldComponent(page, 'Email'),
-        password: TextFieldComponent(page, 'Password'),
+        name: TextFieldComponent(page, 'Plan Name'),
+        description: TextFieldComponent(page, 'Description'),
     };
 
     return {
         fields,
 
         async fill(data) {
-            if (data.email) await fields.email.setValue(data.email);
-            if (data.password) await fields.password.setValue(data.password);
+            if (data.name) await fields.name.setValue(data.name);
+            if (data.description) await fields.description.setValue(data.description);
         },
 
         async submit() {
-            await page.locator('form').getByRole('button', { name: 'Login' }).click();
+            await page.getByRole('button', { name: 'Create' }).click();
             await pause(500);
         },
 
@@ -48,7 +48,7 @@ Every form component must expose:
 
 ### Standalone Forms
 
-Full-page or dialog forms like `LoginForm`, `RegisterForm`. Called directly by flows and specs.
+Full-page or dialog forms like `PlanCreateForm`, `ParticipantForm`. Called directly by flows and specs.
 
 ### Inline Create Forms
 

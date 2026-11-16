@@ -7,7 +7,7 @@ export async function addLocation(page, data) {
     await pause(500);
     const form = LocationFormComponent(page);
     await form.fillAndSubmit(data);
-    await expect(page.getByText(data.name)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(data.name, { exact: true })).toBeVisible({ timeout: 5000 });
 }
 
 export async function addDefaultLocations(page) {

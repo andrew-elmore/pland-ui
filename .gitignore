@@ -4,6 +4,8 @@
 .env.production.local
 .env.development.local
 .env.test.local
+.env.*
+!.env.example
 
 # Node artifact files
 node_modules/
@@ -40,9 +42,6 @@ coverage/
 # Unit test reports
 TEST*.xml
 
-# Firebase
-.firebase/
-
 # Playwright test artifacts
 test-results/
 playwright-report/
@@ -72,3 +71,5 @@ CLAUDE.local.md
 .claude
 .obsidian
 /examples/
+
+logs/

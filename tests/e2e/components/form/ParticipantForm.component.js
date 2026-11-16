@@ -40,7 +40,7 @@ export default function ParticipantFormComponent(page) {
         },
 
         async submit() {
-            await page.getByRole('button', { name: 'Create' }).click();
+            await page.locator('[role="dialog"]').getByRole('button', { name: 'Add' }).click();
             await pause(500);
         },
 

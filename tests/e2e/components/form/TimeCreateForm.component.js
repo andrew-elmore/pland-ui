@@ -36,7 +36,7 @@ export default function TimeCreateFormComponent(page) {
         },
 
         async submit() {
-            await page.getByRole('button', { name: 'Add' }).click();
+            await page.getByRole('button', { name: 'Add', exact: true }).click();
             await pause(500);
         },
 

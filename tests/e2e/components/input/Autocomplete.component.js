@@ -17,7 +17,7 @@ import pause from '../../utils/pause.js';
  * }}
  */
 export default function AutocompleteComponent(page, label) {
-    const input = page.getByLabel(label);
+    const input = page.getByRole('combobox', { name: label });
 
     return {
         async setValue(value) {

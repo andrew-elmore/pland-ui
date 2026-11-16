@@ -9,7 +9,7 @@ import { test, expect } from '@playwright/test';
 import { loginOrRegister } from '../flows/auth.js';
 
 test.describe('Auth', () => {
-    test('login or register', async ({ page }) => {
+    test('signed-in home', async ({ page }) => {
         await loginOrRegister(page);
     });
 });
@@ -48,7 +48,7 @@ test('create a new plan', async ({ page }) => {
 
 Test complete user journeys and critical paths:
 
-- Auth flows (login, register)
+- Auth flows (dev-auth identity, session restore, per-user data scoping)
 - CRUD operations on core entities (plans, steps, times)
 - Multi-step workflows that cross entity boundaries
 
@@ -64,7 +64,7 @@ Do not test:
 - Use `expect(locator).toBeVisible()` for presence checks
 - Use `expect(locator).toHaveText()` for content checks
 - Always pass `{ timeout: N }` on assertions that depend on network requests or navigation
-- 3000ms for fast operations (login redirect)
+- 3000ms for fast operations (route redirects)
 - 10000ms for operations involving API calls and re-renders
 
 ## Test Independence

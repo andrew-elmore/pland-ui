@@ -1,3 +1,4 @@
+import { expect } from '@playwright/test';
 import TextFieldComponent from '../input/TextField.component.js';
 import pause from '../../utils/pause.js';
 
@@ -36,14 +37,16 @@ export default function LocationFormComponent(page) {
             if (data.name) await fields.name.setValue(data.name);
             if (data.search) {
                 await fields.search.setValue(data.search);
-                await pause(1000);
+                await expect(page.getByRole('option').first()).toBeVisible({ timeout: 5000 });
                 await page.getByRole('option').first().click();
-                await pause(500);
+                const dialog = page.locator('[role="dialog"]');
+                await expect(dialog.locator('span').filter({ hasText: /,/ }).first()).toBeVisible({ timeout: 5000 });
+                await pause(300);
             }
         },
 
         async submit() {
-            await page.getByRole('button', { name: 'Add' }).click();
+            await page.locator('[role="dialog"]').getByRole('button', { name: 'Add' }).click();
             await pause(500);
         },
 

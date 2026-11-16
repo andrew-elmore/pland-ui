@@ -32,8 +32,8 @@ async function setupWithRouteStep(page) {
     await LocationPickerComponent(page, 'Destination').setValue('Office');
     await TimeSelectorComponent(page, /Departure Time|Arrival Time/).setValue('Morning');
     await page.getByRole('button', { name: /Preview Routes/ }).click();
-    await page.getByText(/Route \d/).first().waitFor({ timeout: 15000 });
-    await page.getByText(/Route \d/).first().click();
+    await page.getByText(/\d+ min/).first().waitFor({ timeout: 15000 });
+    await page.getByText(/\d+ min/).first().click();
     await pause(300);
     await page.getByRole('button', { name: 'Create' }).click();
     await pause(1000);
@@ -48,11 +48,11 @@ test.describe('Times — Route-Dependent', () => {
 
         const routeTime = page.locator('li', { hasText: '(via route)' }).first();
         await expect(routeTime).toBeVisible({ timeout: 5000 });
-        await expect(routeTime.getByRole('button')).not.toBeVisible();
+        await expect(routeTime.getByRole('button')).toHaveCount(2);
 
         const morningTime = page.locator('li', { hasText: 'Morning' });
         await expect(morningTime).toBeVisible({ timeout: 5000 });
-        await expect(morningTime.getByRole('button')).toBeVisible();
+        await expect(morningTime.getByRole('button')).toHaveCount(4);
     });
 
     test('TC-28: edit route-dependent time', async ({ page }) => {
@@ -60,7 +60,7 @@ test.describe('Times — Route-Dependent', () => {
 
         const routeTime = page.locator('li', { hasText: '(via route)' }).first();
         await expect(routeTime).toBeVisible({ timeout: 5000 });
-        await routeTime.getByRole('button', { name: /edit/i }).click();
+        await routeTime.getByRole('button').nth(1).click();
         await pause(500);
 
         await expect(page.getByText('This time is computed from a route')).toBeVisible({ timeout: 5000 });

@@ -27,7 +27,7 @@ test.describe('Times', () => {
         await navigateToSection(page, 'Times');
         await addAbsoluteTime(page, { label: 'Trip Start', datetime: '2026-06-15T09:00' });
 
-        await page.getByRole('button', { name: 'Add' }).click();
+        await page.getByRole('button', { name: 'Add', exact: true }).click();
         const form = TimeFormComponent(page);
         await form.fields.label.setValue('Lunch');
         await form.fields.relativeTo.setValue('Trip Start');
@@ -137,7 +137,7 @@ test.describe('Times', () => {
         const timeSelector = TimeSelectorComponent(page, 'Start Time');
         await timeSelector.createAndSelect({ label: 'Start', datetime: '2026-06-15T09:00' });
 
-        await expect(page.getByText('Start')).toBeVisible({ timeout: 5000 });
+        await expect(page.getByText(/Start.*9:00/)).toBeVisible({ timeout: 5000 });
     });
 
     test('TC-73: inline time creation — absolute only', async ({ page }) => {
@@ -152,8 +152,8 @@ test.describe('Times', () => {
         await page.getByRole('button', { name: 'Add Step' }).click();
         await expect(page.getByText('Add Step')).toBeVisible({ timeout: 5000 });
 
-        const startTimeInput = page.getByLabel('Start Time');
-        const addButton = startTimeInput.locator('..').locator('..').getByRole('button').last();
+        const startTimeInput = page.getByRole('combobox', { name: 'Start Time' });
+        const addButton = startTimeInput.locator('..').locator('..').locator('..').locator('..').getByRole('button').last();
         await addButton.click();
 
         await expect(page.getByLabel('Label')).toBeVisible({ timeout: 5000 });
@@ -165,7 +165,7 @@ test.describe('Times', () => {
         const datetimeField = page.getByLabel('Date & Time');
         await datetimeField.fill('2026-06-15T09:00');
 
-        await page.getByRole('button', { name: 'Add' }).click();
+        await page.getByRole('button', { name: 'Add', exact: true }).click();
         await expect(page.getByText('Departure')).toBeVisible({ timeout: 5000 });
     });
 });
